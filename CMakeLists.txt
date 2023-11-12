@@ -24,6 +24,7 @@ if(APPLE OR WIN32)
     target_sources(${PROJECT_NAME}
         PRIVATE
             shader.h
+            stb_image.h
     )
 
     target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARY} ${glfwLIB})

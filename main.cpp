@@ -5,6 +5,16 @@
 #include <glfw3.h>
 #include "shader.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
+
+
 // a callback function used to resize the viewport with respect to resize of the window by users.
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -64,6 +74,31 @@ int main(int argc, char* argv[])
     // register callback function to window resize.
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    //================================================================================//
+
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int width, height, nrChannels;
+
+    unsigned char* data = stbi_load("../textures/floor.jpg", &width, &height, &nrChannels, 0);
+
+    if(data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
 
     //=======================================================================================//
 
@@ -72,10 +107,10 @@ int main(int argc, char* argv[])
     //=======================================================================================//
 
     float vertices[] = {
-            0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f,
-            0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
-            -0.5f, 0.5f, 0.0f, 0.3f, 0.3, 0.0f
+            0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+            0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+            -0.5f, 0.5f, 0.0f, 0.3f, 0.3, 0.0f, 0.0f, 1.0f
     };
 
     unsigned int indices[] = {
@@ -96,12 +131,15 @@ int main(int argc, char* argv[])
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // set vertex attribute pointer
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+
 
     GLuint ebo;
     glGenBuffers(1, &ebo);
@@ -115,6 +153,14 @@ int main(int argc, char* argv[])
 
     //=========================================================================================//
 
+    glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
+    glm::mat4 trans = glm::mat4(1.0f);
+    trans = glm::translate(trans, glm::vec3(1.0f, 1.0f, 0.0f));
+    vec = trans * vec;
+
+    std::cout << vec.x << vec.y << vec.z << std::endl;
+
+
 
     // render loop. Keep drawing images and handling user input until the program has been explicitly told to stop.
     while(!glfwWindowShouldClose(window))
@@ -125,7 +171,7 @@ int main(int argc, char* argv[])
         // render commands here.
 
         // A state-setting function
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);;
         // we can specify which buffer we would like to clear. The possible bits are GL_COLOR_BUFFER, GL_DEPTH_BUFFER_BIT
         // and GL_STENCIL_BUFFER_BIT
         // A state-using function
@@ -137,6 +183,8 @@ int main(int argc, char* argv[])
 
         ourShader.use();
         //ourShader.setFloat()
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
 
         // when bind VAO, it automatically binds VBO, EBO, regenerate vertex attributes pointers for us.
         glBindVertexArray(vao);
