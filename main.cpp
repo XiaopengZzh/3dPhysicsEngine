@@ -87,6 +87,8 @@ int main(int argc, char* argv[])
 
     int width, height, nrChannels;
 
+    stbi_set_flip_vertically_on_load(true);
+
     unsigned char* data = stbi_load("../textures/floor.jpg", &width, &height, &nrChannels, 0);
 
     if(data)
@@ -152,14 +154,15 @@ int main(int argc, char* argv[])
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     //=========================================================================================//
-
+    /*
     glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
+    // initialize a 4 by 4 matrix to be identical matrix.
     glm::mat4 trans = glm::mat4(1.0f);
     trans = glm::translate(trans, glm::vec3(1.0f, 1.0f, 0.0f));
     vec = trans * vec;
 
     std::cout << vec.x << vec.y << vec.z << std::endl;
-
+    */
 
 
     // render loop. Keep drawing images and handling user input until the program has been explicitly told to stop.
@@ -183,6 +186,15 @@ int main(int argc, char* argv[])
 
         ourShader.use();
         //ourShader.setFloat()
+
+        glm::mat4 trans = glm::mat4(1.0f);
+        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+        // when using glm::rotate, we should normalize the pivol axis that the rotation is with respect to.
+        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        GLint transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
 
         glBindTexture(GL_TEXTURE_2D, textureID);
 
