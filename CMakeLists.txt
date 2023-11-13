@@ -4,6 +4,9 @@ project(RBD_experimental)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    CXX_STANDARD 11
+    CXX_STANDARD_REQUIRED YES)
 
 if(APPLE OR WIN32)
 
@@ -25,6 +28,7 @@ if(APPLE OR WIN32)
         PRIVATE
             shader.h
             stb_image.h
+            camera.h
     )
 
     target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARY} ${glfwLIB})
