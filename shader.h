@@ -1,5 +1,7 @@
-#if defined(_WIN64) || defined(_WIN32) || defined(__APPLE__)
 #ifndef SHADER_H
+#define SHADER_H
+#if defined(_WIN64) || defined(_WIN32) || defined(__APPLE__)
+
 
 #include <glad/glad.h>
 #include <fstream>

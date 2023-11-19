@@ -3,6 +3,10 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include "macros.h"
+#if RENDER_ENABLED
+
+
 #include <glad/glad.h>
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -127,5 +131,5 @@ private:
     }
 
 };
-
+#endif //RENDER_ENABLED
 #endif //CAMERA_H

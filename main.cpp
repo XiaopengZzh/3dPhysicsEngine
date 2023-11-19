@@ -16,13 +16,13 @@
 #include "camera.h"
 #include <vector>
 #include <fstream>
+#include "mesh.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xposIn, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 unsigned int loadTexture(const char* path);
-std::vector<float> loadModel(const std::string &filename);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -36,11 +36,6 @@ bool firstMouse = true;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-
-// lighting
-//glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-
-
 
 int main(int argc, char* argv[])
 {
@@ -96,54 +91,14 @@ int main(int argc, char* argv[])
 
     glEnable(GL_DEPTH_TEST);
 
-    //================================================================================//
-
-    // Create a texture
-    /*
-    GLuint textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    int width, height, nrChannels;
-
-    stbi_set_flip_vertically_on_load(true);
-
-    unsigned char* data = stbi_load("../textures/floor.jpg", &width, &height, &nrChannels, 0);
-
-    if(data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
-    */
     //=======================================================================================//
 
     Shader CubeShader("../shaders/lightcasters.vs", "../shaders/lightcasters.fs");
-    //Shader BulbShader("../shaders/lighting.vs", "../shaders/lighting.fs");
+
 
     //=======================================================================================//
 
-    std::vector<float> vertices = loadModel("../models/cube.xyz");
-
-    for(int i = 0; i < 36; i++)
-    {
-        for(int j = 0; j < 8; j++)
-        {
-            std::cout << vertices[i * 8 + j] << " ";
-        }
-        std::cout << std::endl;
-    }
-
+    Mesh cube("../models/cube.xyz");
 
     // world space positions of our cubes
     glm::vec3 cubePositions[] = {
@@ -159,63 +114,6 @@ int main(int argc, char* argv[])
             glm::vec3(-1.3f,  1.0f, -1.5f)
     };
 
-    /*
-    unsigned int indices[] = {
-            0, 1, 3,
-            1, 2, 3
-    };
-    */
-
-    GLuint cubeVao;
-    glGenVertexArrays(1, &cubeVao);
-    glBindVertexArray(cubeVao);
-
-    GLuint cubeVBO;
-    glGenBuffers(1, &cubeVBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
-
-    // set vertex attribute pointer
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    //glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
-
-    GLuint lightVAO;
-    glGenVertexArrays(1, &lightVAO);
-    glBindVertexArray(lightVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    /*
-    GLuint ebo;
-    glGenBuffers(1, &ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-    */
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    //=========================================================================================//
-    /*
-    glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
-    // initialize a 4 by 4 matrix to be identical matrix.
-    glm::mat4 trans = glm::mat4(1.0f);
-    trans = glm::translate(trans, glm::vec3(1.0f, 1.0f, 0.0f));
-    vec = trans * vec;
-
-    std::cout << vec.x << vec.y << vec.z << std::endl;
-    */
 
     unsigned int diffuseMap = loadTexture("../textures/container.png");
     unsigned int specularMap = loadTexture("../textures/container_specular.png");
@@ -251,16 +149,16 @@ int main(int argc, char* argv[])
         //glUseProgram(shaderProgramID);
 
         CubeShader.use();
-        CubeShader.setVec3("light.direction", -0.2f, -1.0f, 1.0f);
+        //CubeShader.setVec3("light.direction", -0.2f, -1.0f, 1.0f);
         CubeShader.setVec3("viewPos", camera.Position);
 
-
+        /*
         CubeShader.setVec3("light.ambient", 0.8f, 0.8f, 0.8f);
         CubeShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
         CubeShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 
         CubeShader.setFloat("material.shininess", 32.0f);
-
+        */
         //ourShader.setFloat()
 
         /*
@@ -291,7 +189,7 @@ int main(int argc, char* argv[])
         //glBindTexture(GL_TEXTURE_2D, textureID);
 
         // when bind VAO, it automatically binds VBO, EBO, regenerate vertex attributes pointers for us.
-        glBindVertexArray(cubeVao);
+        glBindVertexArray(cube.VAO);
         //glDrawArrays(GL_TRIANGLES, 0, 3);
         //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
@@ -306,18 +204,6 @@ int main(int argc, char* argv[])
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
-        /*
-        BulbShader.use();
-        BulbShader.setMat4("projection", projection);
-        BulbShader.setMat4("view", view);
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.2f));
-        BulbShader.setMat4("model", model);
-        */
-        //glBindVertexArray(lightVAO);
-        //glDrawArrays(GL_TRIANGLES, 0, 36);
-
 
         // swap the color buffer used to render current iteration with the previous one and show it as output to screen
         glfwSwapBuffers(window);
@@ -327,9 +213,9 @@ int main(int argc, char* argv[])
     }
 
     // de-allocate all resources
-    glDeleteVertexArrays(1, &cubeVao);
+    glDeleteVertexArrays(1, &(cube.VAO));
     //glDeleteVertexArrays(1, &lightVAO);
-    glDeleteBuffers(1, &cubeVBO);
+    glDeleteBuffers(1, &(cube.VBO));
     glDeleteProgram(CubeShader.ID);
     //glDeleteProgram(BulbShader.ID);
 
@@ -422,27 +308,4 @@ unsigned int loadTexture(char const* path)
     }
 
     return textureID;
-}
-
-
-std::vector<float> loadModel(const std::string &filename)
-{
-    std::vector<float> model;
-
-    std::ifstream in(filename);
-
-    int ptNum;
-    in >> ptNum;
-
-    for(int idx = 0; idx < ptNum; idx++)
-    {
-        float x;
-        for(int j = 0; j < 8; j++)
-        {
-            in >> x;
-            model.push_back(x);
-        }
-    }
-
-    return model;
 }

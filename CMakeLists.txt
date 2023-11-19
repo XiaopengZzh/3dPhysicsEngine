@@ -8,6 +8,20 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 11
     CXX_STANDARD_REQUIRED YES)
 
+target_sources(${PROJECT_NAME}
+    PRIVATE
+        macros.h
+        mesh.h
+        object.h
+)
+
+target_sources(${PROJECT_NAME}
+    PRIVATE
+        mesh.cpp
+        object.cpp
+)
+
+
 if(APPLE OR WIN32)
 
     find_package(OpenGL REQUIRED)
