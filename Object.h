@@ -8,6 +8,8 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "camera.h"
+
 
 enum class EObjectType
 {
@@ -15,7 +17,7 @@ enum class EObjectType
     DYNAMIC
 };
 
-class object
+class Object
 {
 public:
 
@@ -26,10 +28,13 @@ public:
     glm::vec3 location;
     glm::quat rotation;
 
+    Object();
 
-    object(Mesh* mesh, EObjectType type, Shader shader);
+    Object(Mesh* mesh, EObjectType type, Shader shader);
 
-    void Draw();
+    void setTransformation(glm::vec3 location, glm::quat rotation);
+
+    void Draw(Camera& cam);
 
 
 };

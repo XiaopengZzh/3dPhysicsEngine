@@ -13,20 +13,20 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+#include "macros.h"
+
+
 #include "camera.h"
 #include <vector>
 #include <fstream>
 #include "mesh.h"
-
+#include "Object.h"
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xposIn, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 unsigned int loadTexture(const char* path);
 
-// settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
 
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -100,6 +100,12 @@ int main(int argc, char* argv[])
 
     Mesh cube("../models/cube.xyz");
 
+    Object cubeList[10];
+    for(int idx = 0; idx < 10; idx++)
+    {
+        cubeList[idx] = Object(&cube, EObjectType::DYNAMIC, CubeShader);
+    }
+
     // world space positions of our cubes
     glm::vec3 cubePositions[] = {
             glm::vec3( 0.0f,  0.0f,  0.0f),
@@ -114,9 +120,24 @@ int main(int argc, char* argv[])
             glm::vec3(-1.3f,  1.0f, -1.5f)
     };
 
+    glm::quat cubeRotations[10];
+    glm::vec3 pivot = glm::normalize(glm::vec3(1.0f, 0.3f, 0.5f));
+    for(int idx = 0; idx < 10; idx++)
+    {
+        cubeRotations[idx] = glm::quat(glm::cos( glm::radians(20.0f * idx / 2.0f )), pivot);
+    }
 
-    unsigned int diffuseMap = loadTexture("../textures/container.png");
-    unsigned int specularMap = loadTexture("../textures/container_specular.png");
+    for(int idx = 0; idx < 10; idx++)
+    {
+        cubeList[idx].setTransformation(cubePositions[idx], cubeRotations[idx]);
+    }
+
+    //unsigned int diffuseMap = loadTexture("../textures/container.png");
+    //unsigned int specularMap = loadTexture("../textures/container_specular.png");
+
+    cube.addTexture("../textures/container.png");
+    cube.addTexture("../textures/container_specular.png");
+
 
     CubeShader.use();
     CubeShader.setInt("material.diffuse", 0);
@@ -145,63 +166,9 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-        // use our shader program when we want to render an object.
-        //glUseProgram(shaderProgramID);
-
-        CubeShader.use();
-        //CubeShader.setVec3("light.direction", -0.2f, -1.0f, 1.0f);
-        CubeShader.setVec3("viewPos", camera.Position);
-
-        /*
-        CubeShader.setVec3("light.ambient", 0.8f, 0.8f, 0.8f);
-        CubeShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
-        CubeShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-
-        CubeShader.setFloat("material.shininess", 32.0f);
-        */
-        //ourShader.setFloat()
-
-        /*
-        glm::mat4 trans = glm::mat4(1.0f);
-        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-        // when using glm::rotate, we should normalize the pivol axis that the rotation is with respect to.
-        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-        */
-
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        CubeShader.setMat4("projection", projection);
-
-        glm::mat4 view = camera.GetViewMatrix();
-        CubeShader.setMat4("view", view);
-
-        //glm::mat4 model = glm::mat4(1.0f);
-        //CubeShader.setMat4("model", model);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMap);
-
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, specularMap);
-        //GLint transformLoc = glGetUniformLocation(ourShader.ID, "transform");
-        //glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-
-        //glActiveTexture(GL_TEXTURE0);
-        //glBindTexture(GL_TEXTURE_2D, textureID);
-
-        // when bind VAO, it automatically binds VBO, EBO, regenerate vertex attributes pointers for us.
-        glBindVertexArray(cube.VAO);
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
-        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
         for(unsigned int i = 0; i < 10; i++)
         {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            CubeShader.setMat4("model", model);
-
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            cubeList[i].Draw(camera);
         }
 
 
@@ -274,38 +241,3 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-unsigned int loadTexture(char const* path)
-{
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-    int width, height, nrComponents;
-    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
-    if (data)
-    {
-        GLenum format = GL_RED;
-        if (nrComponents == 1)
-            format = GL_RED;
-        else if (nrComponents == 3)
-            format = GL_RGB;
-        else if (nrComponents == 4)
-            format = GL_RGBA;
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
-    }
-    else
-    {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
-    }
-
-    return textureID;
-}

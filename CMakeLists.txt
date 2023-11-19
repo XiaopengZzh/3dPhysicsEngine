@@ -12,13 +12,13 @@ target_sources(${PROJECT_NAME}
     PRIVATE
         macros.h
         mesh.h
-        object.h
+        Object.h
 )
 
 target_sources(${PROJECT_NAME}
     PRIVATE
         mesh.cpp
-        object.cpp
+        Object.cpp
 )
 
 

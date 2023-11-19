@@ -17,6 +17,7 @@ public:
     // the shader program ID
     GLuint ID;
 
+    Shader();
     Shader(const char* vertexPath, const char* fragmentPath);
 
     //activate the shader

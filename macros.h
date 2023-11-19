@@ -11,4 +11,11 @@
 #define RENDER_DISABLED 1
 #endif // platform specifications
 
+// settings
+
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
+
+
+
 #endif //MACROS_H
