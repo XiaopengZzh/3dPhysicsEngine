@@ -7,8 +7,9 @@
 #include <glad/glad.h>
 #include <glfw3.h>
 #include "camera.h"
+#include <iostream>
 
-void renderInit();
+GLFWwindow* renderInit();
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xposIn, double ypos);
