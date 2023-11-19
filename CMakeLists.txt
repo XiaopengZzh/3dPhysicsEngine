@@ -37,12 +37,14 @@ if(APPLE OR WIN32)
         PRIVATE
             glad.c
             shader.cpp
+            renderInit.cpp
     )
     target_sources(${PROJECT_NAME}
         PRIVATE
             shader.h
             stb_image.h
             camera.h
+            renderInit.h
     )
 
     target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARY} ${glfwLIB})
