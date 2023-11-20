@@ -13,12 +13,14 @@ target_sources(${PROJECT_NAME}
         macros.h
         mesh.h
         Object.h
+        world.h
 )
 
 target_sources(${PROJECT_NAME}
     PRIVATE
         mesh.cpp
         Object.cpp
+        world.cpp
 )
 
 

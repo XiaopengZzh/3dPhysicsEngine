@@ -20,6 +20,8 @@
 
 #include "mesh.h"
 #include "Object.h"
+#include "world.h"
+
 
 extern Camera camera;
 extern float deltaTime, lastFrame;
@@ -29,6 +31,9 @@ int main(int argc, char* argv[])
     GLFWwindow* window = renderInit();
     if(!window)
         return -1;
+
+    //========================//
+    std::shared_ptr<World> world = World::GetWorldInstance();
 
     //=======================================================================================//
 
@@ -44,20 +49,23 @@ int main(int argc, char* argv[])
 
     //=======================================================================================//
 
-    Mesh cube("../models/cube.xyz");
-    cube.addTexture("../textures/container.png");
-    cube.addTexture("../textures/container_specular.png");
+    std::shared_ptr<Mesh> cubeMesh = std::make_shared<Mesh>("../models/cube.xyz");
+    //Mesh cube("../models/cube.xyz");
+    cubeMesh->addTexture("../textures/container.png");
+    cubeMesh->addTexture("../textures/container_specular.png");
 
-    Mesh tetrahedron("../models/tetrahedron.xyz");
-    tetrahedron.addTexture("../textures/tetra.jpg");
+    std::shared_ptr<Mesh> tetrahedronMesh = std::make_shared<Mesh>("../models/tetrahedron.xyz");
+    //Mesh tetrahedron("../models/tetrahedron.xyz");
+    tetrahedronMesh->addTexture("../textures/tetra.jpg");
 
 
 
 
-    Object cubeList[10];
+    //Object cubeList[10];
     for(int idx = 0; idx < 10; idx++)
     {
-        cubeList[idx] = Object(&cube, EObjectType::DYNAMIC, CubeShader);
+        //cubeList[idx] = Object(&cube, EObjectType::DYNAMIC, CubeShader);
+        world->CreateObject(cubeMesh, EObjectType::DYNAMIC, CubeShader);
     }
 
     // world space positions of our cubes
@@ -83,7 +91,7 @@ int main(int argc, char* argv[])
 
     for(int idx = 0; idx < 10; idx++)
     {
-        cubeList[idx].setTransformation(cubePositions[idx], cubeRotations[idx]);
+        world->ObjectsList[idx]->setTransformation(cubePositions[idx], cubeRotations[idx]);
     }
 
     //=================//
@@ -91,7 +99,8 @@ int main(int argc, char* argv[])
 
     for(int idx = 0; idx < 3; idx++)
     {
-        tetraList[idx] = Object(&tetrahedron, EObjectType::DYNAMIC, tetraShader);
+        //tetraList[idx] = Object(&tetrahedron, EObjectType::DYNAMIC, tetraShader);
+        world->CreateObject(tetrahedronMesh, EObjectType::DYNAMIC, tetraShader);
     }
 
     glm::vec3 tetraPositions[3] = {
@@ -108,7 +117,7 @@ int main(int argc, char* argv[])
 
     for(int i = 0; i < 3; i++)
     {
-        tetraList[i].setTransformation(tetraPositions[i], tetraRotation[i]);
+        world->ObjectsList[i + 10]->setTransformation(tetraPositions[i], tetraRotation[i]);
     }
 
     // render loop. Keep drawing images and handling user input until the program has been explicitly told to stop.
@@ -133,15 +142,7 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-        for(int i = 0; i < 10; i++)
-        {
-            cubeList[i].Draw(camera);
-        }
-
-        for(int i = 0; i < 3; i++)
-        {
-            tetraList[i].Draw(camera);
-        }
+        world->Draw(camera);
 
 
         // swap the color buffer used to render current iteration with the previous one and show it as output to screen
@@ -152,9 +153,9 @@ int main(int argc, char* argv[])
     }
 
     // de-allocate all resources
-    glDeleteVertexArrays(1, &(cube.VAO));
+    glDeleteVertexArrays(1, &(cubeMesh->VAO));
     //glDeleteVertexArrays(1, &lightVAO);
-    glDeleteBuffers(1, &(cube.VBO));
+    glDeleteBuffers(1, &(cubeMesh->VBO));
     glDeleteProgram(CubeShader.ID);
     //glDeleteProgram(BulbShader.ID);
 

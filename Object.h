@@ -9,6 +9,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "camera.h"
+#include <memory>
 
 
 enum class EObjectType
@@ -21,7 +22,7 @@ class Object
 {
 public:
 
-    Mesh* meshInstance;
+    std::weak_ptr<Mesh> meshInstance;
     EObjectType objectType;
     Shader shaderInstance;
 
@@ -30,7 +31,7 @@ public:
 
     Object();
 
-    Object(Mesh* mesh, EObjectType type, Shader shader);
+    Object(std::shared_ptr<Mesh> mesh, EObjectType type, Shader shader);
 
     void setTransformation(glm::vec3 location, glm::quat rotation);
 

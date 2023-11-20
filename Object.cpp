@@ -6,7 +6,7 @@
 
 Object::Object()
 {
-    meshInstance = nullptr;
+    //meshInstance = nullptr; no viable overloaded =, it's already nullptr;
     objectType = EObjectType::STATIC;
     shaderInstance = Shader();
     location = glm::vec3(0.0f);
@@ -14,7 +14,7 @@ Object::Object()
 }
 
 
-Object::Object(Mesh *mesh, EObjectType type, Shader shader)
+Object::Object(std::shared_ptr<Mesh> mesh, EObjectType type, Shader shader)
 {
     meshInstance = mesh;
     objectType = type;
@@ -32,6 +32,7 @@ void Object::setTransformation(glm::vec3 location, glm::quat rotation)
 
 void Object::Draw(Camera &cam)
 {
+#if RENDER_ENABLED
     if(shaderInstance.ID == 0)
         return;
 
@@ -42,15 +43,21 @@ void Object::Draw(Camera &cam)
     glm::mat4 view = cam.GetViewMatrix();
     shaderInstance.setMat4("view", view);
 
+    std::shared_ptr<Mesh> sharedMeshInstance = meshInstance.lock();
+    if(!sharedMeshInstance)
+    {
+        std::cout << "weak mesh pointer is nullptr" << std::endl;
+        return;
+    }
 
-    for(unsigned int idx = 0; idx < meshInstance->textureIDs.size(); idx++)
+    for(unsigned int idx = 0; idx < sharedMeshInstance->textureIDs.size(); idx++)
     {
         glActiveTexture(GL_TEXTURE0 + idx);
 
-        glBindTexture(GL_TEXTURE_2D, meshInstance->textureIDs[idx]);
+        glBindTexture(GL_TEXTURE_2D, sharedMeshInstance->textureIDs[idx]);
     }
 
-    glBindVertexArray(meshInstance->VAO);
+    glBindVertexArray(sharedMeshInstance->VAO);
 
     glm::mat4 model = glm::translate(glm::mat4(1.0f), location);
 
@@ -74,7 +81,7 @@ void Object::Draw(Camera &cam)
     */
 
     shaderInstance.setMat4("model", model);
-    glDrawArrays(GL_TRIANGLES, 0, meshInstance->vertices.size());
-
+    glDrawArrays(GL_TRIANGLES, 0, sharedMeshInstance->vertices.size());
+#endif // RENDER_ENABLED
 
 }
