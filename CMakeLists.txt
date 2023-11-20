@@ -14,6 +14,10 @@ target_sources(${PROJECT_NAME}
         mesh.h
         Object.h
         world.h
+        bodyInstance.h
+        physicsComponent.h
+        collisionGeometry.h
+        physicsDefinition.h
 )
 
 target_sources(${PROJECT_NAME}
@@ -21,6 +25,7 @@ target_sources(${PROJECT_NAME}
         mesh.cpp
         Object.cpp
         world.cpp
+        bodyInstance.cpp
 )
 
 

@@ -9,7 +9,7 @@ World::World()
 
 void World::CreateObject(std::shared_ptr<Mesh> mesh, EObjectType type, Shader shader)
 {
-    ObjectsList.push_back(std::make_shared<Object>(mesh, type, shader));
+    ObjectsList.emplace_back(mesh, type, shader);
 }
 
 void World::Init()
@@ -19,8 +19,31 @@ void World::Init()
 
 void World::Draw(Camera &cam)
 {
-    for(int idx = 0; idx < ObjectsList.size(); idx++)
+    for(auto & idx : ObjectsList)
     {
-        ObjectsList[idx]->Draw(cam);
+        idx.Draw(cam);
     }
+}
+
+void World::physicsRegistration()
+{
+    auto size = ObjectsList.size();
+
+    for(int idx = 0; idx < size; idx++)
+    {
+        transforms.emplace_back(ObjectsList[idx].location, ObjectsList[idx].rotation);
+        movements.emplace_back(glm::vec3(0.0f), glm::vec3(0.0f));
+
+        std::shared_ptr<Mesh> mesh = ObjectsList[idx].meshInstance.lock();
+
+        if(!mesh)
+        {
+            std::cout << "weak ptr fails to point to mesh" << std::endl;
+            continue;
+        }
+
+        bodyInstances.emplace_back(ObjectsList[idx].objectType, &transforms.back(), &movements.back(), &(mesh->collision));
+
+    }
+
 }

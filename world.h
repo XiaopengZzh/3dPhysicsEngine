@@ -8,6 +8,8 @@
 #include <iostream>
 #include "Object.h"
 #include "camera.h"
+#include "bodyInstance.h"
+#include "mesh.h"
 
 
 class World
@@ -28,9 +30,18 @@ public:
 
     void CreateObject(std::shared_ptr<Mesh> mesh, EObjectType type, Shader shader);
 
-    std::vector<std::shared_ptr<Object>> ObjectsList;
-
     void Draw(Camera &cam);
+
+    void physicsRegistration();
+
+
+    std::vector<Object> ObjectsList;
+
+    // ECS, stores transform and movement information of all physics instance in one block of memory
+    std::vector<TransformComponent> transforms;
+    std::vector<MovementComponent> movements;
+
+    std::vector<bodyInstance> bodyInstances;
 
 private:
     World();

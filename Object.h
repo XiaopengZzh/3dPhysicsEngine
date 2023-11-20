@@ -10,13 +10,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "camera.h"
 #include <memory>
-
-
-enum class EObjectType
-{
-    STATIC,
-    DYNAMIC
-};
+#include "physicsDefinition.h"
 
 class Object
 {

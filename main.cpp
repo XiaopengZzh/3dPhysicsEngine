@@ -91,11 +91,11 @@ int main(int argc, char* argv[])
 
     for(int idx = 0; idx < 10; idx++)
     {
-        world->ObjectsList[idx]->setTransformation(cubePositions[idx], cubeRotations[idx]);
+        world->ObjectsList[idx].setTransformation(cubePositions[idx], cubeRotations[idx]);
     }
 
     //=================//
-    Object tetraList[3];
+    //Object tetraList[3];
 
     for(int idx = 0; idx < 3; idx++)
     {
@@ -117,8 +117,11 @@ int main(int argc, char* argv[])
 
     for(int i = 0; i < 3; i++)
     {
-        world->ObjectsList[i + 10]->setTransformation(tetraPositions[i], tetraRotation[i]);
+        world->ObjectsList[i + 10].setTransformation(tetraPositions[i], tetraRotation[i]);
     }
+
+
+    world->physicsRegistration();
 
     // render loop. Keep drawing images and handling user input until the program has been explicitly told to stop.
     while(!glfwWindowShouldClose(window))
