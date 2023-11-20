@@ -25,16 +25,40 @@ struct Vertex
     glm::vec3 Position;
     glm::vec3 Normal;
     glm::vec2 TexCoords;
+
+    Vertex()
+    {
+        Position = glm::vec3(0.0f);
+        Normal = glm::vec3(0.0f);
+        TexCoords = glm::vec2(0.0f);
+    }
+
 };
 
-/*
-struct Texture
+
+struct elementBuffer
 {
-    unsigned int id;
-    std::string type;
-    std::string path;
+public:
+    // The order of the three vertices and the outward direction satisfy the right-hand rule.
+    unsigned int Indices[3];
+
+    elementBuffer(){Indices[0] = 0; Indices[1] = 0; Indices[2] = 0;}
+    elementBuffer(unsigned int x, unsigned int y, unsigned int z)
+    {
+        Indices[0] = x;
+        Indices[1] = y;
+        Indices[2] = z;
+    }
 };
-*/
+
+struct collisionGeometry
+{
+    std::vector<glm::vec3> collisionVertices;
+    std::vector<elementBuffer> elementBufferObject;
+};
+
+
+
 class Mesh
 {
 public:
@@ -45,8 +69,10 @@ public:
     unsigned int VBO;
 
     Mesh(const std::string &filename, std::vector<unsigned int> textureIDs = std::vector<unsigned int>() );
-    //void Draw(Shader &shader);
+
     void addTexture(char const* path);
+
+    collisionGeometry collision;
 
 private:
 

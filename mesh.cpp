@@ -15,8 +15,6 @@ Mesh::Mesh(const std::string &filename, std::vector<unsigned int> textureIDs)
 {
     this->textureIDs = textureIDs;
 
-    Vertex vec;
-
     std::ifstream in(filename);
 
     int ptNum;
@@ -24,6 +22,8 @@ Mesh::Mesh(const std::string &filename, std::vector<unsigned int> textureIDs)
 
     for(int idx = 0; idx < ptNum; idx++)
     {
+        Vertex vec;
+
         float x, y, z;
 
         in >> x >> y >> z;
@@ -42,6 +42,27 @@ Mesh::Mesh(const std::string &filename, std::vector<unsigned int> textureIDs)
     }
 
     setupMesh();
+
+    int collisionVertNum;
+    in >> collisionVertNum;
+
+    for(int idx = 0; idx < collisionVertNum; idx++)
+    {
+        glm::vec3 vec;
+        in >> vec[0] >> vec[1] >> vec[2];
+        collision.collisionVertices.push_back(vec);
+    }
+
+    int elementBufferNum;
+    in >> elementBufferNum;
+
+    for(int idx = 0; idx < elementBufferNum; idx++)
+    {
+        elementBuffer buf;
+        in >> buf.Indices[0] >> buf.Indices[1] >> buf.Indices[2];
+        collision.elementBufferObject.push_back(buf);
+    }
+
 }
 
 void Mesh::addTexture(char const* path)

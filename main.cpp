@@ -33,11 +33,26 @@ int main(int argc, char* argv[])
     //=======================================================================================//
 
     Shader CubeShader("../shaders/lightcasters.vs", "../shaders/lightcasters.fs");
+    CubeShader.use();
+    CubeShader.setInt("material.diffuse", 0);
+    CubeShader.setInt("material.specular", 1);
+
+    Shader tetraShader("../shaders/tetrahedron.vs", "../shaders/tetrahedron.fs");
+    tetraShader.use();
+    tetraShader.setInt("diffuse", 0);
 
 
     //=======================================================================================//
 
     Mesh cube("../models/cube.xyz");
+    cube.addTexture("../textures/container.png");
+    cube.addTexture("../textures/container_specular.png");
+
+    Mesh tetrahedron("../models/tetrahedron.xyz");
+    tetrahedron.addTexture("../textures/tetra.jpg");
+
+
+
 
     Object cubeList[10];
     for(int idx = 0; idx < 10; idx++)
@@ -71,15 +86,30 @@ int main(int argc, char* argv[])
         cubeList[idx].setTransformation(cubePositions[idx], cubeRotations[idx]);
     }
 
+    //=================//
+    Object tetraList[3];
 
-    cube.addTexture("../textures/container.png");
-    cube.addTexture("../textures/container_specular.png");
+    for(int idx = 0; idx < 3; idx++)
+    {
+        tetraList[idx] = Object(&tetrahedron, EObjectType::DYNAMIC, tetraShader);
+    }
 
+    glm::vec3 tetraPositions[3] = {
+            glm::vec3(3.0f, 4.0f, 5.0f),
+            glm::vec3(-3.0f, 1.0f, -8.0f),
+            glm::vec3(4.0f, -6.0f, 4.0f)
+    };
 
-    CubeShader.use();
-    CubeShader.setInt("material.diffuse", 0);
-    CubeShader.setInt("material.specular", 1);
+    glm::quat tetraRotation[3] = {
+            glm::quat(0.2f, 1.0f, 0.0f, 0.0f),
+            glm::quat(0.2f, 0.0f, 1.0f, 0.0f),
+            glm::quat(0.3f, 0.0f, 0.0f, 1.0f)
+    };
 
+    for(int i = 0; i < 3; i++)
+    {
+        tetraList[i].setTransformation(tetraPositions[i], tetraRotation[i]);
+    }
 
     // render loop. Keep drawing images and handling user input until the program has been explicitly told to stop.
     while(!glfwWindowShouldClose(window))
@@ -103,9 +133,14 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-        for(unsigned int i = 0; i < 10; i++)
+        for(int i = 0; i < 10; i++)
         {
             cubeList[i].Draw(camera);
+        }
+
+        for(int i = 0; i < 3; i++)
+        {
+            tetraList[i].Draw(camera);
         }
 
 
