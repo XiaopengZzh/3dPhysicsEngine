@@ -14,7 +14,7 @@ Object::Object()
 }
 
 
-Object::Object(std::shared_ptr<Mesh> mesh, EObjectType type, Shader shader)
+Object::Object(const std::shared_ptr<Mesh>& mesh, EObjectType type, Shader shader)
 {
     meshInstance = mesh;
     objectType = type;
@@ -24,10 +24,10 @@ Object::Object(std::shared_ptr<Mesh> mesh, EObjectType type, Shader shader)
     rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 }
 
-void Object::setTransformation(glm::vec3 location, glm::quat rotation)
+void Object::setTransformation(glm::vec3 _location, glm::quat _rotation)
 {
-    this->location = location;
-    this->rotation = rotation;
+    location = _location;
+    rotation = _rotation;
 }
 
 void Object::Draw(Camera &cam)

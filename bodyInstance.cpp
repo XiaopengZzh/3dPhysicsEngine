@@ -24,4 +24,18 @@ bodyInstance::bodyInstance(EObjectType type, TransformComponent *transform, Move
     this->movement = movement;
     this->collision = collision;
     mass = 1.0f;
+    pendingLinearImpulse = glm::vec3(0.0f);
+    pendingAngularImpulse = glm::vec3(0.0f);
+}
+
+
+void bodyInstance::integration(float dt)
+{
+    if(transform == nullptr || movement == nullptr) return;
+
+    pendingLinearImpulse += mass * glm::vec3(0.0f, 0.0f, -GRAVITY_ACC) * dt;
+
+    movement->momentum += pendingLinearImpulse;
+
+    //todo movement->angularMomentum += pendingAngularImpulse
 }

@@ -3,9 +3,12 @@
 #ifndef WORLD_H
 #define WORLD_H
 
+
+
 #include <memory>
 #include <vector>
 #include <iostream>
+#include "macros.h"
 #include "Object.h"
 #include "camera.h"
 #include "bodyInstance.h"
@@ -34,6 +37,10 @@ public:
 
     void physicsRegistration();
 
+    void simulate(float dt);
+
+    void syncTransform();
+
 
     std::vector<Object> ObjectsList;
 
@@ -44,7 +51,9 @@ public:
     std::vector<bodyInstance> bodyInstances;
 
 private:
+
     World();
+
 };
 
 

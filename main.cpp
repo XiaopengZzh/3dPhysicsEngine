@@ -22,6 +22,8 @@
 #include "Object.h"
 #include "world.h"
 
+#include <chrono>
+
 
 extern Camera camera;
 extern float deltaTime, lastFrame;
@@ -123,9 +125,43 @@ int main(int argc, char* argv[])
 
     world->physicsRegistration();
 
+    // set initial velocity
+    for(auto &body : world->bodyInstances)
+    {
+        body.setMovement(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f));
+    }
+
+    // =================================//
+
+    //int TotalFrame = 0;
+
+    auto previousTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = previousTime;
+    float dt = 0.0f;
     // render loop. Keep drawing images and handling user input until the program has been explicitly told to stop.
     while(!glfwWindowShouldClose(window))
     {
+
+        //TotalFrame++;
+        /*
+        if(TotalFrame % 1000 == 0)
+        {
+            std::cout << "total frame : " << TotalFrame << std::endl;
+            endTime = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+            std::cout << "duration : " << duration.count() << "ms" << std::endl;
+        }
+         */
+
+        currentTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - previousTime);
+        unsigned int dt_ms = duration.count();
+        dt = 0.001f * (dt_ms < 1 ? 1.0f : static_cast<float>(dt_ms));
+
+        previousTime = currentTime;
+
+        world->simulate(dt);
+
 
         auto currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
@@ -138,7 +174,7 @@ int main(int argc, char* argv[])
         // render commands here.
 
         // A state-setting function
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);;
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         // we can specify which buffer we would like to clear. The possible bits are GL_COLOR_BUFFER, GL_DEPTH_BUFFER_BIT
         // and GL_STENCIL_BUFFER_BIT
         // A state-using function

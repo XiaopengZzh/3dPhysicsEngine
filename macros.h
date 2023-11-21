@@ -16,6 +16,8 @@
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+#define GRAVITY_ACC 9.8f
+
 
 
 #endif //MACROS_H

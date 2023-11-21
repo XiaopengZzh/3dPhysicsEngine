@@ -47,3 +47,31 @@ void World::physicsRegistration()
     }
 
 }
+
+void World::simulate(float dt)
+{
+    for(auto &body : bodyInstances)
+    {
+        body.integration(dt);
+    }
+
+#if RENDER_ENABLED
+    syncTransform();
+#endif //RENDER_ENABLED
+}
+
+void World::syncTransform()
+{
+    for(int idx = 0; idx < ObjectsList.size(); idx++)
+    {
+        ObjectsList[idx].location = bodyInstances[idx].transform->position;
+        ObjectsList[idx].rotation = bodyInstances[idx].transform->rotation;
+    }
+}
+
+
+
+
+
+
+
