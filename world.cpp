@@ -42,7 +42,7 @@ void World::physicsRegistration()
             continue;
         }
 
-        bodyInstances.emplace_back(ObjectsList[idx].objectType, &transforms.back(), &movements.back(), &(mesh->collision));
+        bodyInstances.emplace_back(ObjectsList[idx].objectType, &(mesh->collision));
 
     }
 
@@ -50,22 +50,37 @@ void World::physicsRegistration()
 
 void World::simulate(float dt)
 {
-    for(auto &body : bodyInstances)
-    {
-        body.integration(dt);
-    }
+    integration(dt);
 
 #if RENDER_ENABLED
     syncTransform();
 #endif //RENDER_ENABLED
 }
 
+void World::integration(float dt)
+{
+    int size = ObjectsList.size();
+    for(int idx = 0; idx < size; idx++)
+    {
+        bodyInstances[idx].pendingLinearImpulse += bodyInstances[idx].mass * glm::vec3(0.0f, 0.0f, -GRAVITY_ACC) * dt;
+
+        movements[idx].momentum += bodyInstances[idx].pendingLinearImpulse;
+
+        transforms[idx].position += dt * (movements[idx].momentum * 2.0f - bodyInstances[idx].pendingLinearImpulse) / (4 * bodyInstances[idx].mass);
+
+        // todo movement->angularMomentum += pendingAngularImpulse
+    }
+}
+
+
+
+
 void World::syncTransform()
 {
     for(int idx = 0; idx < ObjectsList.size(); idx++)
     {
-        ObjectsList[idx].location = bodyInstances[idx].transform->position;
-        ObjectsList[idx].rotation = bodyInstances[idx].transform->rotation;
+        ObjectsList[idx].location = transforms[idx].position;
+        ObjectsList[idx].rotation = transforms[idx].rotation;
     }
 }
 

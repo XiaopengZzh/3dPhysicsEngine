@@ -39,6 +39,8 @@ public:
 
     void simulate(float dt);
 
+    void integration(float dt);
+
     void syncTransform();
 
 

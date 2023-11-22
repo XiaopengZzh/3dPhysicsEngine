@@ -4,6 +4,7 @@
 #define BODYINSTANCE_H
 
 #include "macros.h"
+#include <memory>
 #include "physicsComponent.h"
 #include "glm/glm.hpp"
 #include "collisionGeometry.h"
@@ -16,8 +17,10 @@ public:
 
     float mass;// in kilogram
 
-    TransformComponent* transform;
-    MovementComponent* movement;
+    //TransformComponent* transform;
+    //MovementComponent* movement;
+    //std::weak_ptr<TransformComponent> transform;
+    //std::weak_ptr<MovementComponent> movement;
 
     collisionGeometry* collision;
 
@@ -29,14 +32,11 @@ public:
     void setMovement(glm::vec3 momentum, glm::vec3 angularMomentum);
     void setMass(float mass);
 
-    bodyInstance(EObjectType type, TransformComponent* transform, MovementComponent* movement, collisionGeometry* collision);
+    bodyInstance(EObjectType type, collisionGeometry* collision);
 
     void integration(float dt);
 
-
-
 };
-
 
 
 #endif //BODYINSTANCE_H

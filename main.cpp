@@ -126,9 +126,11 @@ int main(int argc, char* argv[])
     world->physicsRegistration();
 
     // set initial velocity
-    for(auto &body : world->bodyInstances)
+    for(auto &move : world->movements)
     {
-        body.setMovement(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f));
+        //body.setMovement(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f));
+        move.momentum = glm::vec3(0.0f, 0.0f, 20.0f);
+        move.angularMomentum = glm::vec3(0.0f);
     }
 
     // =================================//

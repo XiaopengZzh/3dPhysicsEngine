@@ -38,7 +38,7 @@ void Object::Draw(Camera &cam)
 
     shaderInstance.use();
     shaderInstance.setVec3("viewPos", cam.Position);
-    glm::mat4 projection = glm::perspective(glm::radians(cam.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(cam.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, ZNEAR, ZFAR);
     shaderInstance.setMat4("projection", projection);
     glm::mat4 view = cam.GetViewMatrix();
     shaderInstance.setMat4("view", view);
