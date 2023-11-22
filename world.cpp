@@ -62,7 +62,7 @@ void World::integration(float dt)
     int size = ObjectsList.size();
     for(int idx = 0; idx < size; idx++)
     {
-        bodyInstances[idx].pendingLinearImpulse += bodyInstances[idx].mass * glm::vec3(0.0f, 0.0f, -GRAVITY_ACC) * dt;
+        bodyInstances[idx].pendingLinearImpulse += bodyInstances[idx].mass * glm::vec3(0.0f, -GRAVITY_ACC, 0.0f) * dt;
 
         movements[idx].momentum += bodyInstances[idx].pendingLinearImpulse;
 
