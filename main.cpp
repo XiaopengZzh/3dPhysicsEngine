@@ -53,11 +53,13 @@ int main(int argc, char* argv[])
 
     std::shared_ptr<Mesh> cubeMesh = std::make_shared<Mesh>("../models/cube.xyz");
     //Mesh cube("../models/cube.xyz");
+    cubeMesh->setMass(2.0f);
     cubeMesh->addTexture("../textures/container.png");
     cubeMesh->addTexture("../textures/container_specular.png");
 
     std::shared_ptr<Mesh> tetrahedronMesh = std::make_shared<Mesh>("../models/tetrahedron.xyz");
     //Mesh tetrahedron("../models/tetrahedron.xyz");
+    tetrahedronMesh->setMass(1.0f);
     tetrahedronMesh->addTexture("../textures/tetra.jpg");
 
 
@@ -130,7 +132,7 @@ int main(int argc, char* argv[])
     {
         //body.setMovement(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f));
         move.momentum = glm::vec3(0.0f, 0.0f, 20.0f);
-        move.angularMomentum = glm::vec3(0.0f);
+        move.angularMomentum = glm::vec3(100.0f, 2.0f, 0.5f);
     }
 
     // =================================//

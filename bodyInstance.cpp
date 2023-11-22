@@ -13,7 +13,7 @@ void bodyInstance::setMovement(glm::vec3 momentum, glm::vec3 angularMomentum)
 
 void bodyInstance::setMass(float _mass)
 {
-    mass = _mass;
+    //mass = _mass;
 }
 
 
@@ -23,7 +23,7 @@ bodyInstance::bodyInstance(EObjectType type, collisionGeometry *collision)
     //this->transform = transform;
     //this->movement = movement;
     this->collision = collision;
-    mass = 1.0f;
+    //mass = 1.0f;
     pendingLinearImpulse = glm::vec3(0.0f);
     pendingAngularImpulse = glm::vec3(0.0f);
 }

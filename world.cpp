@@ -62,14 +62,22 @@ void World::integration(float dt)
     int size = ObjectsList.size();
     for(int idx = 0; idx < size; idx++)
     {
-        bodyInstances[idx].pendingLinearImpulse += bodyInstances[idx].mass * glm::vec3(0.0f, -GRAVITY_ACC, 0.0f) * dt;
+        bodyInstances[idx].pendingLinearImpulse += bodyInstances[idx].collision->mass * glm::vec3(0.0f, -GRAVITY_ACC, 0.0f) * dt;
 
         movements[idx].momentum += bodyInstances[idx].pendingLinearImpulse;
+        movements[idx].angularMomentum += bodyInstances[idx].pendingAngularImpulse;
 
-        transforms[idx].position += dt * (movements[idx].momentum * 2.0f - bodyInstances[idx].pendingLinearImpulse) / (4 * bodyInstances[idx].mass);
+        transforms[idx].position += dt * (movements[idx].momentum * 2.0f - bodyInstances[idx].pendingLinearImpulse) / (4 * bodyInstances[idx].collision->mass);
 
-        // todo movement->angularMomentum += pendingAngularImpulse
+        // calculate rotation
+        glm::mat3 Rot = glm::toMat3(transforms[idx].rotation);
+        glm::vec3 angularVelocity = glm::transpose(Rot) * bodyInstances[idx].collision->inertiaTensorInv *
+                Rot * (movements[idx].angularMomentum - bodyInstances[idx].pendingAngularImpulse / 2.0f);
+        //glm::vec3 angularVelocity =
+        glm::quat newRot = transforms[idx].rotation * glm::exp(0.5f * glm::quat(0.0f, angularVelocity * dt));
+        transforms[idx].rotation = glm::normalize(newRot);
     }
+
 }
 
 

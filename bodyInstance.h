@@ -15,7 +15,10 @@ class bodyInstance
 {
 public:
 
-    float mass;// in kilogram
+    //float mass;// in kilogram
+
+    //glm::mat3 inertiaTensor;
+
 
     //TransformComponent* transform;
     //MovementComponent* movement;

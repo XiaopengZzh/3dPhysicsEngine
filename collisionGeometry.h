@@ -6,6 +6,8 @@
 #define RBD_EXPERIMENTAL_COLLISIONGEOMETRY_H
 
 #include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 #include <vector>
 
 struct elementBuffer
@@ -27,6 +29,9 @@ struct collisionGeometry
 {
     std::vector<glm::vec3> collisionVertices;
     std::vector<elementBuffer> elementBufferObject;
+    float mass;
+    glm::mat3 inertiaTensor;
+    glm::mat3 inertiaTensorInv;
 };
 
 

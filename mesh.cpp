@@ -130,3 +130,22 @@ void Mesh::setupMesh()
     glBindVertexArray(0);
 #endif //RENDER_ENABLED
 }
+
+void Mesh::setMass(float mass)
+{
+    collision.mass = mass;
+    calcInertiaTensor();
+}
+
+void Mesh::calcInertiaTensor()
+{
+    glm::mat3 Imat = glm::mat3(0.0f);
+    for(auto &vec : collision.collisionVertices)
+    {
+        Imat += glm::mat3(glm::dot(vec, vec));
+        Imat -= glm::outerProduct(vec, vec);
+    }
+    collision.inertiaTensor = collision.mass * Imat;
+    collision.inertiaTensorInv = glm::inverse(collision.inertiaTensor);
+
+}

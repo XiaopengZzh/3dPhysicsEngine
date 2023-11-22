@@ -50,6 +50,10 @@ public:
 
     void addTexture(char const* path);
 
+    void setMass(float mass);
+
+    void calcInertiaTensor();
+
     collisionGeometry collision;
 
 private:
