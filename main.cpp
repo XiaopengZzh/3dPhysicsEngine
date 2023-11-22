@@ -48,6 +48,10 @@ int main(int argc, char* argv[])
     tetraShader.use();
     tetraShader.setInt("diffuse", 0);
 
+    Shader boundingWallShader("../shaders/boundingWall.vs", "../shaders/boundingWall.fs");
+    boundingWallShader.use();
+    boundingWallShader.setInt("diffuse", 0);
+    boundingWallShader.setFloat("texScale", 100);
 
     //=======================================================================================//
 
@@ -62,9 +66,14 @@ int main(int argc, char* argv[])
     tetrahedronMesh->setMass(1.0f);
     tetrahedronMesh->addTexture("../textures/tetra.jpg");
 
+    std::shared_ptr<Mesh> boundingWallMesh = std::make_shared<Mesh>("../models/boundingWall.xyz");
+    boundingWallMesh->setMass(1.0f);
+    boundingWallMesh->addTexture("../textures/boundingWall.jpg");
 
 
 
+
+    // ====================================================================
     //Object cubeList[10];
     for(int idx = 0; idx < 10; idx++)
     {
@@ -98,8 +107,7 @@ int main(int argc, char* argv[])
         world->ObjectsList[idx].setTransformation(cubePositions[idx], cubeRotations[idx]);
     }
 
-    //=================//
-    //Object tetraList[3];
+    //======================================================================//
 
     for(int idx = 0; idx < 3; idx++)
     {
@@ -123,7 +131,37 @@ int main(int argc, char* argv[])
     {
         world->ObjectsList[i + 10].setTransformation(tetraPositions[i], tetraRotation[i]);
     }
+    // ====================================================================//
 
+    for(int idx = 0; idx < 6; idx++)
+    {
+        world->CreateObject(boundingWallMesh, EObjectType::STATIC, boundingWallShader);
+    }
+
+    glm::vec3 boundingWallPositions[6] = {
+            glm::vec3(200.0f, 0.0f, 0.0f),
+            glm::vec3(-200.0f, 0.0f, 0.0f),
+            glm::vec3(0.0f, 200.0f, 0.0f),
+            glm::vec3(0.0f, -200.0f, 0.0f),
+            glm::vec3(0.0f, 0.0f, 200.0f),
+            glm::vec3(0.0f, 0.0f, -200.0f)
+    };
+
+    glm::quat boundingWallRotations[6] = {
+            glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
+            glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
+            glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
+            glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
+            glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
+            glm::quat(1.0f, 0.0f, 0.0f, 0.0f)
+    };
+
+    for(int idx = 0; idx < 6; idx++)
+    {
+        world->ObjectsList[idx + 13].setTransformation(boundingWallPositions[idx], boundingWallRotations[idx]);
+    }
+
+    // =====================================================//
 
     world->physicsRegistration();
 

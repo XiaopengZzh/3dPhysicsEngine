@@ -62,6 +62,8 @@ void World::integration(float dt)
     int size = ObjectsList.size();
     for(int idx = 0; idx < size; idx++)
     {
+        if(bodyInstances[idx].objectType == EObjectType::STATIC) continue;
+
         bodyInstances[idx].pendingLinearImpulse += bodyInstances[idx].collision->mass * glm::vec3(0.0f, -GRAVITY_ACC, 0.0f) * dt;
 
         movements[idx].momentum += bodyInstances[idx].pendingLinearImpulse;
