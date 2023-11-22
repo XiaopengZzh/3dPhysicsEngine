@@ -69,7 +69,7 @@ void World::integration(float dt)
         movements[idx].momentum += bodyInstances[idx].pendingLinearImpulse;
         movements[idx].angularMomentum += bodyInstances[idx].pendingAngularImpulse;
 
-        transforms[idx].position += dt * (movements[idx].momentum * 2.0f - bodyInstances[idx].pendingLinearImpulse) / (4 * bodyInstances[idx].collision->mass);
+        transforms[idx].position += dt * (movements[idx].momentum * 2.0f - bodyInstances[idx].pendingLinearImpulse) / (2.0f * bodyInstances[idx].collision->mass);
 
         // calculate rotation
         glm::mat3 Rot = glm::toMat3(transforms[idx].rotation);
@@ -78,6 +78,10 @@ void World::integration(float dt)
         //glm::vec3 angularVelocity =
         glm::quat newRot = transforms[idx].rotation * glm::exp(0.5f * glm::quat(0.0f, angularVelocity * dt));
         transforms[idx].rotation = glm::normalize(newRot);
+
+        // refresh pending impulse
+        bodyInstances[idx].pendingLinearImpulse = glm::vec3(0.0f);
+        bodyInstances[idx].pendingAngularImpulse = glm::vec3(0.0f);
     }
 
 }

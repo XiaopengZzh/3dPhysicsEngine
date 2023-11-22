@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     Shader boundingWallShader("../shaders/boundingWall.vs", "../shaders/boundingWall.fs");
     boundingWallShader.use();
     boundingWallShader.setInt("diffuse", 0);
-    boundingWallShader.setFloat("texScale", 100);
+    boundingWallShader.setFloat("texScale", 8);
 
     //=======================================================================================//
 
@@ -169,38 +169,35 @@ int main(int argc, char* argv[])
     for(auto &move : world->movements)
     {
         //body.setMovement(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f));
-        move.momentum = glm::vec3(0.0f, 0.0f, 20.0f);
+        move.momentum = glm::vec3(0.0f, 0.0f, 2.0f);
         move.angularMomentum = glm::vec3(100.0f, 2.0f, 0.5f);
     }
 
     // =================================//
 
-    //int TotalFrame = 0;
+    /*
+    int TotalFrame = 0;
+    auto startTime = std::chrono::high_resolution_clock::now();
+    auto endTime = startTime;
+    */
 
-    auto previousTime = std::chrono::high_resolution_clock::now();
-    auto currentTime = previousTime;
+    auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = startTime;
+    auto previousTime = startTime;
+    //unsigned int elapsedTime_ms = 0;
+
     float dt = 0.0f;
     // render loop. Keep drawing images and handling user input until the program has been explicitly told to stop.
     while(!glfwWindowShouldClose(window))
     {
 
-        //TotalFrame++;
-        /*
-        if(TotalFrame % 1000 == 0)
-        {
-            std::cout << "total frame : " << TotalFrame << std::endl;
-            endTime = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-            std::cout << "duration : " << duration.count() << "ms" << std::endl;
-        }
-         */
-
         currentTime = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - previousTime);
         unsigned int dt_ms = duration.count();
         dt = 0.001f * (dt_ms < 1 ? 1.0f : static_cast<float>(dt_ms));
-
         previousTime = currentTime;
+        //elapsedTime_ms += (dt_ms < 1 ? 1 : dt_ms);
+
 
         world->simulate(dt);
 
