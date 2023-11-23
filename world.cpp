@@ -50,11 +50,20 @@ void World::physicsRegistration()
 
 void World::simulate(float dt)
 {
+
     integration(dt);
 
 #if RENDER_ENABLED
     syncTransform();
 #endif //RENDER_ENABLED
+
+    /*
+    glm::vec3 sth;
+    if(narrowCheck(0, 10, sth))
+    {
+        std::cout << sth.x << " " << sth.y << " " << sth.z << std::endl;
+    }
+     */
 }
 
 void World::integration(float dt)
@@ -76,7 +85,7 @@ void World::integration(float dt)
         glm::vec3 angularVelocity = glm::transpose(Rot) * bodyInstances[idx].collision->inertiaTensorInv *
                 Rot * (movements[idx].angularMomentum - bodyInstances[idx].pendingAngularImpulse / 2.0f);
         //glm::vec3 angularVelocity =
-        glm::quat newRot = transforms[idx].rotation * glm::exp(0.5f * glm::quat(0.0f, angularVelocity * dt));
+        glm::quat newRot = transforms[idx].rotation + transforms[idx].rotation * glm::exp(0.5f * glm::quat(0.0f, angularVelocity * dt));
         transforms[idx].rotation = glm::normalize(newRot);
 
         // refresh pending impulse
@@ -125,10 +134,10 @@ bool World::narrowCheck(unsigned int idx1, unsigned int idx2, glm::vec3& minimal
     //simplex
     glm::vec3 a, b, c, d;
     glm::vec3 searchDir = transforms[idx1].position - transforms[idx2].position;
-    c = support(searchDir, idx2) - support(searchDir, idx1);
+    c = support(searchDir, idx2) - support(-searchDir, idx1);
     searchDir = -c;
 
-    b = support(searchDir, idx2) - support(searchDir, idx1);
+    b = support(searchDir, idx2) - support(-searchDir, idx1);
 
     if(glm::dot(b, searchDir) < 0.0f)
         return false;
@@ -143,7 +152,7 @@ bool World::narrowCheck(unsigned int idx1, unsigned int idx2, glm::vec3& minimal
 
     for(int iter = 0; iter < GJK_MAX_NUM_ITERATIONS; iter++)
     {
-        a = support(searchDir, idx2) - support(searchDir, idx1);
+        a = support(searchDir, idx2) - support(-searchDir, idx1);
         if(glm::dot(a, searchDir) < 0.0f)
             return false;
 
@@ -159,7 +168,7 @@ bool World::narrowCheck(unsigned int idx1, unsigned int idx2, glm::vec3& minimal
             minimalTranslationVector = EPA(a, b, c, d, idx1, idx2);
             return true;
         }
-         
+
     }
     return false;
 }
@@ -228,7 +237,7 @@ glm::vec3 World::EPA(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, unsigne
 
         //search normal to face that's closest to origin
         glm::vec3 search_dir = faces[closest_face][3];
-        glm::vec3 p = support(search_dir, idx2) - support(search_dir, idx1);
+        glm::vec3 p = support(search_dir, idx2) - support(-search_dir, idx1);
 
         if(glm::dot(p, search_dir)-min_dist<EPA_TOLERANCE){
             //Convergence (new point is not significantly further from origin)
@@ -251,7 +260,7 @@ glm::vec3 World::EPA(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, unsigne
                     bool found_edge = false;
                     for(int k=0; k<num_loose_edges; k++) //Check if current edge is already in list
                     {
-                        if(glm::all( glm::epsilonEqual(loose_edges[k][1], current_edge[0], 0.001f) ) && glm::all( glm::epsilonEqual( loose_edges[k][0], current_edge[1], 0.001f ) )){
+                        if(glm::all( glm::epsilonEqual(loose_edges[k][1], current_edge[0], 0.0001f) ) && glm::all( glm::epsilonEqual( loose_edges[k][0], current_edge[1], 0.0001f ) )){
                             //Edge is already in the list, remove it
                             //THIS ASSUMES EDGE CAN ONLY BE SHARED BY 2 TRIANGLES (which should be true)
                             //THIS ALSO ASSUMES SHARED EDGE WILL BE REVERSED IN THE TRIANGLES (which
@@ -294,7 +303,7 @@ glm::vec3 World::EPA(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, unsigne
             faces[num_faces][3] = glm::normalize(glm::cross(loose_edges[i][0]-loose_edges[i][1], loose_edges[i][0]-p));
 
             //Check for wrong normal to maintain CCW winding
-            float bias = 0.000001; //in case dot result is only slightly < 0 (because origin is on face)
+            float bias = 0.000001f; //in case dot result is only slightly < 0 (because origin is on face)
             if(glm::dot(faces[num_faces][0], faces[num_faces][3])+bias < 0){
                 glm::vec3 temp = faces[num_faces][0];
                 faces[num_faces][0] = faces[num_faces][1];

@@ -96,10 +96,11 @@ int main(int argc, char* argv[])
     };
 
     glm::quat cubeRotations[10];
-    glm::vec3 pivot = glm::normalize(glm::vec3(1.0f, 0.3f, 0.5f));
+    glm::vec3 axis = glm::normalize(glm::vec3(1.0f, 0.3f, 0.5f));
     for(int idx = 0; idx < 10; idx++)
     {
-        cubeRotations[idx] = glm::quat(glm::cos( glm::radians(20.0f * idx / 2.0f )), pivot);
+        float angle = glm::radians(20.0f * idx);
+        cubeRotations[idx] = glm::angleAxis(angle, axis);
     }
 
     for(int idx = 0; idx < 10; idx++)
@@ -116,19 +117,20 @@ int main(int argc, char* argv[])
     }
 
     glm::vec3 tetraPositions[3] = {
-            glm::vec3(3.0f, 4.0f, 5.0f),
+            glm::vec3(-0.6f, 0.0f, 0.0f),
             glm::vec3(-3.0f, 1.0f, -8.0f),
             glm::vec3(4.0f, -6.0f, 4.0f)
     };
 
     glm::quat tetraRotation[3] = {
-            glm::quat(0.2f, 1.0f, 0.0f, 0.0f),
+            glm::quat(0.8f, 0.0f, 0.0f, 1.0f),
             glm::quat(0.2f, 0.0f, 1.0f, 0.0f),
             glm::quat(0.3f, 0.0f, 0.0f, 1.0f)
     };
 
     for(int i = 0; i < 3; i++)
     {
+        glm::normalize(tetraRotation[i]);
         world->ObjectsList[i + 10].setTransformation(tetraPositions[i], tetraRotation[i]);
     }
     // ====================================================================//
@@ -169,8 +171,8 @@ int main(int argc, char* argv[])
     for(auto &move : world->movements)
     {
         //body.setMovement(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f));
-        move.momentum = glm::vec3(0.0f, 0.0f, 2.0f);
-        move.angularMomentum = glm::vec3(100.0f, 2.0f, 0.5f);
+        move.momentum = glm::vec3(0.0f, 0.0f, 0.0f);
+        move.angularMomentum = glm::vec3(0.0f, 0.0f, 0.0f);
     }
 
     // =================================//
