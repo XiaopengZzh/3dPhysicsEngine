@@ -20,6 +20,11 @@ const unsigned int SCR_HEIGHT = 600;
 #define ZNEAR 0.1f
 #define ZFAR 1000.0f
 
+#define GJK_MAX_NUM_ITERATIONS 64
+#define EPA_TOLERANCE 0.0001f
+#define EPA_MAX_NUM_FACES 64
+#define EPA_MAX_NUM_LOOSE_EDGES 32
+#define EPA_MAX_NUM_ITERATIONS 64
 
 
 #endif //MACROS_H

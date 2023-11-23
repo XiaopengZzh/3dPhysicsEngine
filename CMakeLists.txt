@@ -18,6 +18,7 @@ target_sources(${PROJECT_NAME}
         physicsComponent.h
         collisionGeometry.h
         physicsDefinition.h
+        topology.h
 )
 
 target_sources(${PROJECT_NAME}
@@ -26,6 +27,7 @@ target_sources(${PROJECT_NAME}
         Object.cpp
         world.cpp
         bodyInstance.cpp
+        topology.cpp
 )
 
 

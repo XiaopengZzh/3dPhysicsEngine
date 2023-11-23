@@ -18,6 +18,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtx/quaternion.hpp"
+#include "topology.h"
 
 class World
 {
@@ -44,6 +45,12 @@ public:
     void simulate(float dt);
 
     void integration(float dt);
+
+    bool narrowCheck(unsigned int idx1, unsigned int idx2, glm::vec3& minimalTranslationVector);
+
+    glm::vec3 support(glm::vec3 dir, unsigned int idx);
+
+    glm::vec3 EPA(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, unsigned int idx1, unsigned int idx2);
 
     void syncTransform();
 
