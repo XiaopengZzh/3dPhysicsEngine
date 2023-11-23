@@ -16,6 +16,10 @@ void bodyInstance::setMass(float _mass)
     //mass = _mass;
 }
 
+void bodyInstance::setRestitution(float _restitution)
+{
+    restitution = _restitution;
+}
 
 bodyInstance::bodyInstance(EObjectType type, collisionGeometry *collision)
 {
@@ -26,6 +30,7 @@ bodyInstance::bodyInstance(EObjectType type, collisionGeometry *collision)
     //mass = 1.0f;
     pendingLinearImpulse = glm::vec3(0.0f);
     pendingAngularImpulse = glm::vec3(0.0f);
+    restitution = 0.8f;
 }
 
 

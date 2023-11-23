@@ -27,6 +27,8 @@ public:
 
     collisionGeometry* collision;
 
+    float restitution;
+
     glm::vec3 pendingLinearImpulse;
     glm::vec3 pendingAngularImpulse;
 
@@ -34,6 +36,7 @@ public:
 
     void setMovement(glm::vec3 momentum, glm::vec3 angularMomentum);
     void setMass(float mass);
+    void setRestitution(float _restitution);
 
     bodyInstance(EObjectType type, collisionGeometry* collision);
 

@@ -199,6 +199,43 @@ glm::vec3 World::support(glm::vec3 dir, unsigned int idx)
 
 }
 
+// Todo : When two faces confront and collide, contact point may not be correct.
+int World::supportRetDiff(glm::vec3 dir, unsigned int idx, float& diff)
+{
+    dir = glm::normalize(dir);
+    glm::quat rotatedDir = glm::conjugate(transforms[idx].rotation) * glm::quat(0.0f, dir) * transforms[idx].rotation;
+    dir = glm::vec3(rotatedDir.x, rotatedDir.y, rotatedDir.z);
+
+    int maxIndex = -1, secondMaxIndex = -1;
+    float maxVal = std::numeric_limits<float>::min();
+    float secondMaxVal = std::numeric_limits<float>::min();
+
+    int size = bodyInstances[idx].collision->collisionVertices.size();
+
+    for(int i = 0; i < size; i++)
+    {
+        float d = glm::dot( bodyInstances[idx].collision->collisionVertices[i], dir );
+
+        if(d > maxVal)
+        {
+            secondMaxVal = maxVal;
+            secondMaxIndex = maxIndex;
+            maxVal = d;
+            maxIndex = i;
+        }
+        else if(d > secondMaxVal)
+        {
+            secondMaxVal = d;
+            secondMaxIndex = i;
+        }
+
+    }
+    diff = maxVal - secondMaxVal;
+    return maxIndex;
+}
+
+
+
 glm::vec3 World::EPA(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, unsigned int idx1, unsigned int idx2){
     glm::vec3 faces[EPA_MAX_NUM_FACES][4]; //Array of faces, each with 3 verts and a normal
 
@@ -313,9 +350,58 @@ glm::vec3 World::EPA(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, unsigne
             num_faces++;
         }
     } //End for iterations
-    //printf("EPA did not converge\n");
+
     std::cout << "EPA did not converge. " << std::endl;
     //Return most recent closest point
     return faces[closest_face][3] * glm::dot(faces[closest_face][0], faces[closest_face][3]);
 }
+
+// Todo : if both objects are static, stop collision detection
+glm::vec3 World::calcContactPoint(glm::vec3 minimalTranslationalVector, unsigned int idx1, unsigned int idx2)
+{
+    float factor1 = (bodyInstances[idx1].objectType == EObjectType::STATIC ? 0.0f : 1.0f);
+    float factor2 = (bodyInstances[idx2].objectType == EObjectType::STATIC ? 0.0f : 1.0f);
+
+    float diff1, diff2;
+
+    float mass1 = factor1 / bodyInstances[idx1].collision->mass;
+    float mass2 = factor2 / bodyInstances[idx2].collision->mass;
+
+    int contactPtIdx1 = supportRetDiff(-minimalTranslationalVector, idx1, diff1);
+    int contactPtIdx2 = supportRetDiff(minimalTranslationalVector, idx2, diff2);
+
+    glm::vec3 contactPt;
+
+    // Todo : check if both are infinite small.
+    if(diff1 < diff2)
+    {
+        contactPt = bodyInstances[idx1].collision->collisionVertices[contactPtIdx1];
+        contactPt = transforms[idx1].rotation * contactPt + transforms[idx1].position + minimalTranslationalVector * (mass1 / (mass1 + mass2));
+    }
+    else
+    {
+        contactPt = bodyInstances[idx2].collision->collisionVertices[contactPtIdx2];
+        contactPt = transforms[idx2].rotation * contactPt + transforms[idx2].position - minimalTranslationalVector * (mass2 / (mass1 + mass2));
+    }
+
+    return contactPt;
+}
+
+// Todo : linear system
+// call resolvePenetration after calcContactPoint
+void World::resolvePenetration(glm::vec3 minimalTranslationalVector, unsigned int idx1, unsigned int idx2)
+{
+    float factor1 = (bodyInstances[idx1].objectType == EObjectType::STATIC ? 0.0f : 1.0f);
+    float factor2 = (bodyInstances[idx2].objectType == EObjectType::STATIC ? 0.0f : 1.0f);
+
+    float mass1 = factor1 / bodyInstances[idx1].collision->mass;
+    float mass2 = factor2 / bodyInstances[idx2].collision->mass;
+
+    transforms[idx1].position += minimalTranslationalVector * (mass1 / (mass1 + mass2));
+    transforms[idx2].position -= minimalTranslationalVector * (mass2 / (mass1 + mass2));
+}
+
+
+
+
 

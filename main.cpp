@@ -128,6 +128,7 @@ int main(int argc, char* argv[])
             glm::quat(0.3f, 0.0f, 0.0f, 1.0f)
     };
 
+    //Todo : quaternion initialization
     for(int i = 0; i < 3; i++)
     {
         glm::normalize(tetraRotation[i]);

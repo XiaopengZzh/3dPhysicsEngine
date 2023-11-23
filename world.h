@@ -46,11 +46,18 @@ public:
 
     void integration(float dt);
 
+    // if collision happens, minimalTranslationVector is the direction that object idx1 should move towards.
+    // Object idx2 should move along -minimalTranslationalVector
     bool narrowCheck(unsigned int idx1, unsigned int idx2, glm::vec3& minimalTranslationVector);
 
     glm::vec3 support(glm::vec3 dir, unsigned int idx);
+    int supportRetDiff(glm::vec3 dir, unsigned int idx, float& diff);
 
     glm::vec3 EPA(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, unsigned int idx1, unsigned int idx2);
+
+    glm::vec3 calcContactPoint(glm::vec3 minimalTranslationalVector, unsigned int idx1, unsigned int idx2);
+
+    void resolvePenetration(glm::vec3 minimalTranslationalVector, unsigned int idx1, unsigned int idx2);
 
     void syncTransform();
 
