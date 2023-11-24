@@ -25,6 +25,58 @@ void World::Draw(Camera &cam)
     }
 }
 
+void World::initialAABBs()
+{
+    unsigned int size = bodyInstances.size();
+    for(unsigned int idx = 0; idx < size; idx++)
+    {
+        glm::vec3 vmin(std::numeric_limits<float>::max());
+        glm::vec3 vmax(std::numeric_limits<float>::lowest());
+
+        std::vector<glm::vec3> vertices = bodyInstances[idx].collision->collisionVertices;
+        for(auto &vec : vertices)
+        {
+            vec = transforms[idx].rotation * vec + transforms[idx].position;
+            vmin.x = std::min(vmin.x, vec.x);
+            vmin.y = std::min(vmin.y, vec.y);
+            vmin.z = std::min(vmin.z, vec.z);
+
+            vmax.x = std::max(vmax.x, vec.x);
+            vmax.y = std::max(vmax.y, vec.y);
+            vmax.z = std::max(vmax.z, vec.z);
+        }
+        AABBlist.emplace_back(vmin, vmax);
+
+    }
+}
+
+void World::initialValTags()
+{
+    unsigned int size = AABBlist.size();
+    for(unsigned int idx = 0; idx < size; idx++)
+    {
+        glm::vec3 vmin = AABBlist[idx].vmin;
+        glm::vec3 vmax = AABBlist[idx].vmax;
+
+        flagsX.emplace_back(vmin.x, idx, ECoordFlag::LOW);
+        flagsX.emplace_back(vmax.x, idx, ECoordFlag::HIGH);
+        flagsY.emplace_back(vmin.y, idx, ECoordFlag::LOW);
+        flagsY.emplace_back(vmax.y, idx, ECoordFlag::HIGH);
+        flagsZ.emplace_back(vmin.z, idx, ECoordFlag::LOW);
+        flagsZ.emplace_back(vmax.z, idx, ECoordFlag::HIGH);
+    }
+    //sort value tag
+    std::sort(flagsX.begin(), flagsX.end(), [](valTag a, valTag b){
+        return a.value < b.value;
+    });
+    std::sort(flagsY.begin(), flagsY.end(), [](valTag a, valTag b){
+        return a.value < b.value;
+    });
+    std::sort(flagsZ.begin(), flagsZ.end(), [](valTag a, valTag b){
+        return a.value < b.value;
+    });
+}
+
 void World::physicsRegistration()
 {
     auto size = ObjectsList.size();
@@ -45,6 +97,9 @@ void World::physicsRegistration()
         bodyInstances.emplace_back(ObjectsList[idx].objectType, &(mesh->collision));
 
     }
+    initialAABBs();
+
+    initialValTags();
 
 }
 
@@ -57,13 +112,23 @@ void World::simulate(float dt)
     syncTransform();
 #endif //RENDER_ENABLED
 
-    /*
-    glm::vec3 sth;
-    if(narrowCheck(0, 10, sth))
-    {
-        std::cout << sth.x << " " << sth.y << " " << sth.z << std::endl;
-    }
-     */
+    // collision detection
+    // broad phase
+
+    updateAABBs();
+    updateValTag();
+
+    // process valTag
+    // Todo : broad phase
+    // insert sort for valTag
+
+    // find all potential collided pair
+    pairlist overlapsX = findOverlaps(flagsX);
+    pairlist overlapsY = findOverlaps(flagsY);
+    pairlist overlapsZ = findOverlaps(flagsZ);
+    pairlist potentialCollidePairs = findPotentialCollidePairs(overlapsX, overlapsY, overlapsZ);
+
+    // narrow phase
     glm::vec3 mtv;
     if(narrowCheck(0, 10, mtv))
     {
@@ -72,6 +137,7 @@ void World::simulate(float dt)
         collisionResponse(mtv, 0, 10, contactPt);
     }
 }
+
 
 void World::integration(float dt)
 {
@@ -103,8 +169,6 @@ void World::integration(float dt)
 }
 
 
-
-
 void World::syncTransform()
 {
     for(int idx = 0; idx < ObjectsList.size(); idx++)
@@ -115,10 +179,10 @@ void World::syncTransform()
 }
 
 
-
 bool World::narrowCheck(unsigned int idx1, unsigned int idx2, glm::vec3& minimalTranslationVector)
 {
     // colliders
+    /*
     std::vector<glm::vec3> coll1;
     std::vector<glm::vec3> coll2;
     coll1.reserve(bodyInstances[idx1].collision->collisionVertices.size());
@@ -137,7 +201,7 @@ bool World::narrowCheck(unsigned int idx1, unsigned int idx2, glm::vec3& minimal
         glm::quat rotated_quat = transforms[idx2].rotation * v_quat * glm::conjugate(transforms[idx2].rotation);
         coll2.push_back(glm::vec3(rotated_quat.x, rotated_quat.y, rotated_quat.z) + transforms[idx2].position);
     }
-
+    */
     //simplex
     glm::vec3 a, b, c, d;
     glm::vec3 searchDir = transforms[idx1].position - transforms[idx2].position;
@@ -190,7 +254,8 @@ glm::vec3 World::support(glm::vec3 dir, unsigned int idx)
     glm::vec3 furthestPoint = bodyInstances[idx].collision->collisionVertices[0];
     float max_dot = glm::dot(furthestPoint, dir);
 
-    for(unsigned int i = 1; i < bodyInstances[idx].collision->collisionVertices.size(); i++)
+    unsigned int size = bodyInstances[idx].collision->collisionVertices.size();
+    for(unsigned int i = 1; i < size; i++)
     {
         float d = glm::dot(bodyInstances[idx].collision->collisionVertices[i], dir);
         if(d > max_dot)
@@ -463,8 +528,69 @@ void World::collisionResponse(glm::vec3 mtv, unsigned int idx1, unsigned int idx
 
 }
 
+void World::updateAABBs()
+{
+    unsigned int size = bodyInstances.size();
+    for(unsigned int idx = 0; idx < size; idx++)
+    {
+        glm::vec3 vmin(std::numeric_limits<float>::max());
+        glm::vec3 vmax(std::numeric_limits<float>::lowest());
 
+        std::vector<glm::vec3> vertices = bodyInstances[idx].collision->collisionVertices;
+        for(auto &vec : vertices)
+        {
+            vec = transforms[idx].rotation * vec + transforms[idx].position;
+            vmin.x = std::min(vmin.x, vec.x);
+            vmin.y = std::min(vmin.y, vec.y);
+            vmin.z = std::min(vmin.z, vec.z);
 
+            vmax.x = std::max(vmax.x, vec.x);
+            vmax.y = std::max(vmax.y, vec.y);
+            vmax.z = std::max(vmax.z, vec.z);
+        }
+        AABBlist[idx].vmin = vmin;
+        AABBlist[idx].vmax = vmax;
+    }
+}
+
+void World::updateValTag()
+{
+    for(auto &_flag : flagsX)
+    {
+        if(_flag.flag == ECoordFlag::LOW)
+        {
+            _flag.value = AABBlist[_flag.index].vmin.x;
+        }
+        else
+        {
+            _flag.value = AABBlist[_flag.index].vmax.x;
+        }
+    }
+
+    for(auto &_flag : flagsY)
+    {
+        if(_flag.flag == ECoordFlag::LOW)
+        {
+            _flag.value = AABBlist[_flag.index].vmin.y;
+        }
+        else
+        {
+            _flag.value = AABBlist[_flag.index].vmax.y;
+        }
+    }
+
+    for(auto &_flag : flagsZ)
+    {
+        if(_flag.flag == ECoordFlag::LOW)
+        {
+            _flag.value = AABBlist[_flag.index].vmin.z;
+        }
+        else
+        {
+            _flag.value = AABBlist[_flag.index].vmax.z;
+        }
+    }
+}
 
 
 

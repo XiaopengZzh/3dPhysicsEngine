@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <algorithm>
 #include "macros.h"
 #include "Object.h"
 #include "camera.h"
@@ -19,6 +20,8 @@
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtx/quaternion.hpp"
 #include "topology.h"
+#include "AABB.h"
+
 
 class World
 {
@@ -39,6 +42,10 @@ public:
     void CreateObject(std::shared_ptr<Mesh> mesh, EObjectType type, Shader shader);
 
     void Draw(Camera &cam);
+
+    void initialAABBs();
+
+    void initialValTags();
 
     void physicsRegistration();
 
@@ -63,6 +70,9 @@ public:
 
     void syncTransform();
 
+    void updateAABBs();
+
+    void updateValTag();
 
     std::vector<Object> ObjectsList;
 
@@ -71,6 +81,11 @@ public:
     std::vector<MovementComponent> movements;
 
     std::vector<bodyInstance> bodyInstances;
+
+    std::vector<AABB> AABBlist;
+    std::vector<valTag> flagsX;
+    std::vector<valTag> flagsY;
+    std::vector<valTag> flagsZ;
 
 private:
 
