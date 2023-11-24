@@ -53,6 +53,12 @@ public:
 
     void integration(float dt);
 
+    pairlist broadPhase();
+
+    void collisionResponse(collisionInfolist& collInfolist);
+
+    collisionInfolist narrowPhase(pairlist& potentialCollidedPairs);
+
     // if collision happens, minimalTranslationVector is the direction that object idx1 should move towards.
     // Object idx2 should move along -minimalTranslationalVector
     bool narrowCheck(unsigned int idx1, unsigned int idx2, glm::vec3& minimalTranslationVector);
@@ -66,7 +72,7 @@ public:
 
     void resolvePenetration(glm::vec3 minimalTranslationalVector, unsigned int idx1, unsigned int idx2);
 
-    void collisionResponse(glm::vec3 mtv, unsigned int idx1, unsigned int idx2, glm::vec3 contactPt);
+    void collisionResponseInternal(glm::vec3 mtv, unsigned int idx1, unsigned int idx2, glm::vec3 contactPt);
 
     void syncTransform();
 

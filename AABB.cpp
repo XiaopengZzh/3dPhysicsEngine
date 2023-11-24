@@ -10,6 +10,29 @@ bool AABB::intersect(const AABB &a, const AABB &b)
             (a.vmin.z <= b.vmax.z && a.vmax.z >= b.vmin.z);
 }
 
+
+void insertionSort(std::vector<valTag>& list)
+{
+    unsigned int i, j;
+    valTag key;
+    unsigned int size = list.size();
+    for(i = 1; i < size; i++)
+    {
+        key = list[i];
+        j = i - 1;
+
+        while(j >= 0 && list[j].value > key.value)
+        {
+            list[j + 1] = list[j];
+            j = j - 1;
+        }
+        list[j + 1] = key;
+    }
+}
+
+
+
+
 pairlist findOverlaps(std::vector<valTag>& taglist)
 {
     pairlist res;

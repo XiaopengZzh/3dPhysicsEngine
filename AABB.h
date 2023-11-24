@@ -22,8 +22,18 @@ struct valTag
     unsigned int index;
     ECoordFlag flag;
 
+    valTag() : value(0.0f), index(0), flag(ECoordFlag::LOW) {}
     valTag(float _val, unsigned int _idx, ECoordFlag _flag) : value(_val), index(_idx), flag(_flag) {}
 };
+
+struct collisionInfolist
+{
+    pairlist collidedPairs;
+    // minimal translation vectors
+    std::vector<glm::vec3> mtvList;
+};
+
+
 
 
 class AABB
@@ -39,6 +49,9 @@ public:
     static bool intersect(const AABB& a, const AABB& b);
 
 };
+
+void insertionSort(std::vector<valTag>& list);
+
 
 pairlist findOverlaps(std::vector<valTag>& taglist);
 pairlist findPotentialCollidePairs(pairlist& list1, pairlist& list2, pairlist& list3);

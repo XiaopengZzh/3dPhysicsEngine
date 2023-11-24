@@ -122,21 +122,65 @@ void World::simulate(float dt)
     // Todo : broad phase
     // insert sort for valTag
 
-    // find all potential collided pair
-    pairlist overlapsX = findOverlaps(flagsX);
-    pairlist overlapsY = findOverlaps(flagsY);
-    pairlist overlapsZ = findOverlaps(flagsZ);
-    pairlist potentialCollidePairs = findPotentialCollidePairs(overlapsX, overlapsY, overlapsZ);
+    pairlist potentialCollidedPairs = broadPhase();
 
     // narrow phase
+    /*
     glm::vec3 mtv;
     if(narrowCheck(0, 10, mtv))
     {
         glm::vec3 contactPt = calcContactPoint(mtv, 0, 10);
         resolvePenetration(mtv, 0, 10);
-        collisionResponse(mtv, 0, 10, contactPt);
+        collisionResponseInternal(mtv, 0, 10, contactPt);
+    }
+     */
+    collisionInfolist collidedPairs = narrowPhase(potentialCollidedPairs);
+    collisionResponse(collidedPairs);
+}
+
+pairlist World::broadPhase()
+{
+    insertionSort(flagsX);
+    insertionSort(flagsY);
+    insertionSort(flagsZ);
+
+    // find all potential collided pair
+    pairlist overlapsX = findOverlaps(flagsX);
+    pairlist overlapsY = findOverlaps(flagsY);
+    pairlist overlapsZ = findOverlaps(flagsZ);
+    return findPotentialCollidePairs(overlapsX, overlapsY, overlapsZ);
+}
+
+void World::collisionResponse(collisionInfolist &collInfolist)
+{
+    unsigned int size = collInfolist.collidedPairs.size();
+
+    for(unsigned int idx = 0; idx < size; idx++)
+    {
+        glm::vec3 contactPt = calcContactPoint(collInfolist.mtvList[idx], collInfolist.collidedPairs[idx].first, collInfolist.collidedPairs[idx].second);
+        resolvePenetration(collInfolist.mtvList[idx], collInfolist.collidedPairs[idx].first, collInfolist.collidedPairs[idx].second);
+        collisionResponseInternal(collInfolist.mtvList[idx], collInfolist.collidedPairs[idx].first, collInfolist.collidedPairs[idx].second, contactPt);
     }
 }
+
+
+
+
+collisionInfolist World::narrowPhase(pairlist &potentialCollidedPairs)
+{
+    collisionInfolist res;
+    for(auto& potentialPair : potentialCollidedPairs)
+    {
+        glm::vec3 mtv;
+        if(narrowCheck(potentialPair.first, potentialPair.second, mtv))
+        {
+            res.collidedPairs.push_back(potentialPair);
+            res.mtvList.push_back(mtv);
+        }
+    }
+    return res;
+}
+
 
 
 void World::integration(float dt)
@@ -473,7 +517,7 @@ void World::resolvePenetration(glm::vec3 minimalTranslationalVector, unsigned in
     transforms[idx2].position -= minimalTranslationalVector * (mass2 / (mass1 + mass2));
 }
 
-void World::collisionResponse(glm::vec3 mtv, unsigned int idx1, unsigned int idx2, glm::vec3 contactPt)
+void World::collisionResponseInternal(glm::vec3 mtv, unsigned int idx1, unsigned int idx2, glm::vec3 contactPt)
 {
     glm::vec3 collisionNormal = glm::normalize(mtv);
 
