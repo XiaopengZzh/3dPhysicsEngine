@@ -59,6 +59,8 @@ public:
 
     void resolvePenetration(glm::vec3 minimalTranslationalVector, unsigned int idx1, unsigned int idx2);
 
+    void collisionResponse(glm::vec3 mtv, unsigned int idx1, unsigned int idx2, glm::vec3 contactPt);
+
     void syncTransform();
 
 

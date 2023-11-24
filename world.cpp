@@ -64,6 +64,13 @@ void World::simulate(float dt)
         std::cout << sth.x << " " << sth.y << " " << sth.z << std::endl;
     }
      */
+    glm::vec3 mtv;
+    if(narrowCheck(0, 10, mtv))
+    {
+        glm::vec3 contactPt = calcContactPoint(mtv, 0, 10);
+        resolvePenetration(mtv, 0, 10);
+        collisionResponse(mtv, 0, 10, contactPt);
+    }
 }
 
 void World::integration(float dt)
@@ -400,6 +407,73 @@ void World::resolvePenetration(glm::vec3 minimalTranslationalVector, unsigned in
     transforms[idx1].position += minimalTranslationalVector * (mass1 / (mass1 + mass2));
     transforms[idx2].position -= minimalTranslationalVector * (mass2 / (mass1 + mass2));
 }
+
+void World::collisionResponse(glm::vec3 mtv, unsigned int idx1, unsigned int idx2, glm::vec3 contactPt)
+{
+    glm::vec3 collisionNormal = glm::normalize(mtv);
+
+    float factor1 = (bodyInstances[idx1].objectType == EObjectType::STATIC ? 0.0f : 1.0f);
+    float factor2 = (bodyInstances[idx2].objectType == EObjectType::STATIC ? 0.0f : 1.0f);
+
+    float mass1 = factor1 / bodyInstances[idx1].collision->mass;
+    float mass2 = factor2 / bodyInstances[idx2].collision->mass;
+
+    glm::mat3 Rot1 = glm::toMat3(transforms[idx1].rotation);
+    glm::mat3 invI1 = factor1 * glm::transpose(Rot1) * bodyInstances[idx1].collision->inertiaTensorInv * Rot1;
+
+    glm::mat3 Rot2 = glm::toMat3(transforms[idx2].rotation);
+    glm::mat3 invI2 = factor2 * glm::transpose(Rot2) * bodyInstances[idx2].collision->inertiaTensorInv * Rot2;
+
+
+    glm::vec3 r_AP = contactPt - transforms[idx1].position;
+    glm::vec3 r_BP = contactPt - transforms[idx2].position;
+
+    glm::vec3 vel_AP, vel_BP;
+    if(bodyInstances[idx1].objectType == EObjectType::STATIC)
+    {
+        vel_AP = glm::vec3(0.0f);
+    }
+    else
+    {
+        vel_AP = movements[idx1].momentum / bodyInstances[idx1].collision->mass +
+                glm::cross(invI1 * movements[idx1].angularMomentum, r_AP);
+    }
+    if(bodyInstances[idx2].objectType == EObjectType::STATIC)
+    {
+        vel_BP = glm::vec3(0.0f);
+    }
+    else
+    {
+        vel_BP = movements[idx2].momentum / bodyInstances[idx2].collision->mass +
+                 glm::cross(invI2 * movements[idx2].angularMomentum, r_BP);
+    }
+
+    glm::vec3 impulseJ = -(1 + bodyInstances[idx1].restitution * bodyInstances[idx2].restitution) * collisionNormal;
+    impulseJ *= glm::dot(collisionNormal, vel_AP - vel_BP);
+
+    float inertiaA = glm::dot(collisionNormal, glm::cross(invI1 * glm::cross(r_AP, collisionNormal) , r_AP));
+    float inertiaB = glm::dot(collisionNormal, glm::cross(invI2 * glm::cross(r_BP, collisionNormal) , r_BP));
+
+    impulseJ *= 1.0f / (mass1 + mass2 + inertiaA + inertiaB);
+
+    bodyInstances[idx1].pendingLinearImpulse += impulseJ;
+    bodyInstances[idx2].pendingLinearImpulse -= impulseJ;
+    bodyInstances[idx1].pendingAngularImpulse += glm::cross(r_AP, impulseJ);
+    bodyInstances[idx2].pendingAngularImpulse -= glm::cross(r_BP, impulseJ);
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

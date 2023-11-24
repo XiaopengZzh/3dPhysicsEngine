@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
     }
 
     glm::vec3 tetraPositions[3] = {
-            glm::vec3(-0.6f, 0.0f, 0.0f),
+            glm::vec3(0.0f, 2.0f, 0.0f),
             glm::vec3(-3.0f, 1.0f, -8.0f),
             glm::vec3(4.0f, -6.0f, 4.0f)
     };
@@ -172,10 +172,11 @@ int main(int argc, char* argv[])
     for(auto &move : world->movements)
     {
         //body.setMovement(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f));
-        move.momentum = glm::vec3(0.0f, 0.0f, 0.0f);
+        move.momentum = glm::vec3(0.0f, 3.0f, 0.0f);
         move.angularMomentum = glm::vec3(0.0f, 0.0f, 0.0f);
     }
 
+    world->movements[10].momentum = glm::vec3(0.0f, -2.0f, 0.0f);
     // =================================//
 
     /*
