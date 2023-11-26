@@ -30,9 +30,10 @@ void Object::setTransformation(glm::vec3 _location, glm::quat _rotation)
     rotation = _rotation;
 }
 
+#if RENDER_ENABLED
 void Object::Draw(Camera &cam)
 {
-#if RENDER_ENABLED
+
     if(shaderInstance.ID == 0)
         return;
 
@@ -82,6 +83,7 @@ void Object::Draw(Camera &cam)
 
     shaderInstance.setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, sharedMeshInstance->vertices.size());
-#endif // RENDER_ENABLED
+
 
 }
+#endif // RENDER_ENABLED

@@ -3,7 +3,7 @@
 #include "renderInit.h"
 
 
-
+#if RENDER_ENABLED
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
@@ -120,3 +120,4 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
+#endif

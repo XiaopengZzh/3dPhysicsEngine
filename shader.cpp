@@ -1,5 +1,3 @@
-#if defined(_WIN64) || defined(_WIN32) || defined(__APPLE__)
-
 
 #include "shader.h"
 
@@ -12,6 +10,7 @@ Shader::Shader()
     ID = 0;
 }
 
+#if RENDER_ENABLED
 Shader::Shader(const char *vertexPath, const char *fragmentPath)
 {
     std::string vertexCode;
@@ -131,6 +130,4 @@ void Shader::setVec3(const std::string &name, float x, float y, float z) const
     glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z);
 }
 
-
-
-#endif //platform
+#endif

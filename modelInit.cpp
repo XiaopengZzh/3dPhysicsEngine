@@ -97,7 +97,7 @@ void modelInit()
 #if RENDER_ENABLED
         world->CreateObject(boundingWallMesh, EObjectType::STATIC, boundingWallShader);
 #elif RENDER_DISABLED
-        world->CreateObject(boundWallMesh, EObjectType::STATIC);
+        world->CreateObject(boundingWallMesh, EObjectType::STATIC);
 #endif
     }
 

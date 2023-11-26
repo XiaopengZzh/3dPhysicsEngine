@@ -42,7 +42,9 @@ public:
 
     void CreateObject(std::shared_ptr<Mesh> mesh, EObjectType type, Shader shader = Shader());
 
+#if RENDER_ENABLED
     void Draw(Camera &cam);
+#endif
 
     void initialAABBs();
 

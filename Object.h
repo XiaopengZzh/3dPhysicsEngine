@@ -29,8 +29,9 @@ public:
 
     void setTransformation(glm::vec3 location, glm::quat rotation);
 
+#if RENDER_ENABLED
     void Draw(Camera& cam);
-
+#endif
 
 };
 

@@ -3,7 +3,10 @@
 #ifndef MACROS_H
 #define MACROS_H
 
-#if defined(_WIN64) || defined(__WIN32) || defined(__APPLE__)
+#define FORCE_DISABLE_RENDER 1
+
+
+#if (defined(_WIN64) || defined(__WIN32) || defined(__APPLE__)) && (FORCE_DISABLE_RENDER == 0)
 #define RENDER_ENABLED 1
 #define RENDER_DISABLED 0
 #else
@@ -12,9 +15,10 @@
 #endif // platform specifications
 
 // settings
-
+#if RENDER_ENABLED
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+#endif
 
 #define GRAVITY_ACC 1.0f
 #define ZNEAR 0.1f

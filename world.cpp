@@ -33,6 +33,7 @@ void World::Init()
 
 }
 
+#if RENDER_ENABLED
 void World::Draw(Camera &cam)
 {
     for(auto & idx : ObjectsList)
@@ -40,6 +41,7 @@ void World::Draw(Camera &cam)
         idx.Draw(cam);
     }
 }
+#endif
 
 void World::initialAABBs()
 {

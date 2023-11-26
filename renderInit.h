@@ -9,11 +9,13 @@
 #include "camera.h"
 #include <iostream>
 
+#if RENDER_ENABLED
 GLFWwindow* renderInit();
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xposIn, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+#endif
 
 
 #endif //RENDERINIT_H
