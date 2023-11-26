@@ -10,6 +10,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 #include "macros.h"
 #include "Object.h"
 #include "camera.h"

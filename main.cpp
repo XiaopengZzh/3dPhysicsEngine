@@ -23,13 +23,17 @@ extern float deltaTime, lastFrame;
 
 extern glm::vec3 gravity;
 extern glm::vec3 gravityDirections[6];
+extern float time_broadphase;
+extern float time_collisionResponse;
+extern float time_narrowphase;
+extern float time_integration;
 
 // default input values
 unsigned int thread_count = 1;
 float totalRunTime = 60.0f;
-unsigned int cubeNum = 280;
+unsigned int cubeNum = 150;
 unsigned int tetraNum = 50;
-float gravityReverseInterval = 10.0f;
+float gravityReverseInterval = 15.0f;
 
 int main(int argc, char* argv[])
 {
@@ -69,7 +73,6 @@ int main(int argc, char* argv[])
     //===========================================================================//
 
     std::shared_ptr<World> world = World::GetWorldInstance();
-    printf("world created.\n");
 
     //===========================================================================//
 
@@ -94,6 +97,10 @@ int main(int argc, char* argv[])
     int gravityChangeTag = 1;
 
     bool bShouldClose = false;
+
+    unsigned int totalFrameCount = 0;
+
+    printf("simulation begins...\n");
 
     while((!bShouldClose) && (elapsedTime < totalRunTime))
     {
@@ -135,7 +142,19 @@ int main(int argc, char* argv[])
         bShouldClose = glfwWindowShouldClose(window);
 #endif
 
+        totalFrameCount++;
     }
+
+    printf("simulation ends.\n");
+    printf("======================================================\n");
+    printf("fps : %f \n", float(totalFrameCount) / elapsedTime);
+    printf("time consumed in integration : %f\n", time_integration);
+    printf("time consumed in broad phase : %f\n", time_broadphase);
+    printf("time consumed in narrow phase : %f\n", time_narrowphase);
+    printf("time consumed in collision response : %f\n", time_collisionResponse);
+    printf("======================================================\n");
+
+
 
 #if RENDER_ENABLED
     glfwTerminate();

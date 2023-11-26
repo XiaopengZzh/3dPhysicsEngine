@@ -12,10 +12,15 @@ glm::vec3 gravityDirections[6] = {
 
 glm::vec3 gravity = gravityDirections[0] * GRAVITY_ACC;
 
+float time_broadphase = 0.0f;
+float time_collisionResponse = 0.0f;
+float time_narrowphase = 0.0f;
+float time_integration = 0.0f;
+
 
 World::World()
 {
-    std::cout << "The world is created." << std::endl;
+    std::cout << "World is created." << std::endl;
 }
 
 void World::CreateObject(std::shared_ptr<Mesh> mesh, EObjectType type, Shader shader)
@@ -90,7 +95,7 @@ void World::initialValTags()
 
 void World::physicsRegistration()
 {
-    printf("registering physics.\n");
+    printf("registering physics...\n");
     auto size = ObjectsList.size();
 
     for(int idx = 0; idx < size; idx++)
@@ -117,29 +122,41 @@ void World::physicsRegistration()
 
 void World::simulate(float dt)
 {
+    auto timeTag1 = std::chrono::high_resolution_clock::now();
+    auto timeTag2 = timeTag1;
 
     integration(dt);
+
+    timeTag2 = std::chrono::high_resolution_clock::now();
+    auto integrationDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag2 - timeTag1);
+    time_integration += integrationDuration.count() * 0.001f;
 
 #if RENDER_ENABLED
     syncTransform();
 #endif //RENDER_ENABLED
 
-    // collision detection
     // broad phase
 
     updateAABBs();
     updateValTag();
 
-    // process valTag
-    // Todo : broad phase
-    // insert sort for valTag
-
+    timeTag1 = std::chrono::high_resolution_clock::now();
     pairlist potentialCollidedPairs = broadPhase();
-
+    timeTag2 = std::chrono::high_resolution_clock::now();
+    auto broadPhaseDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag2 - timeTag1);
+    time_broadphase += broadPhaseDuration.count() * 0.001f;
     // narrow phase
 
     collisionInfolist collidedPairs = narrowPhase(potentialCollidedPairs);
+    timeTag1 = std::chrono::high_resolution_clock::now();
+    auto narrowPhaseDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag1 - timeTag2);
+    time_narrowphase += narrowPhaseDuration.count() * 0.001f;
+    // collision response
+
     collisionResponse(collidedPairs);
+    timeTag2 = std::chrono::high_resolution_clock::now();
+    auto collisionResponseDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag2 - timeTag1);
+    time_collisionResponse += collisionResponseDuration.count() * 0.001f;
 }
 
 pairlist World::broadPhase()

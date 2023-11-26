@@ -12,7 +12,7 @@ extern unsigned int tetraNum;
 
 void modelInit()
 {
-    printf("initializing models.\n");
+    printf("initializing models...\n");
     std::shared_ptr<World> world = World::GetWorldInstance();
 
 #if RENDER_ENABLED
@@ -130,7 +130,7 @@ void modelInit()
 
 void movementsInit()
 {
-    printf("initializing movements.\n");
+    printf("initializing movements...\n");
 
     std::shared_ptr<World> world = World::GetWorldInstance();
 
