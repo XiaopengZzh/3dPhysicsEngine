@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.26)
 
-project(RBD_experimental)
+project(3dPhysicsEngine)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
