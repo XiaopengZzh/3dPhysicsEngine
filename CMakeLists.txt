@@ -20,6 +20,7 @@ target_sources(${PROJECT_NAME}
         physicsDefinition.h
         topology.h
         AABB.h
+        modelInit.h
 )
 
 target_sources(${PROJECT_NAME}
@@ -30,6 +31,7 @@ target_sources(${PROJECT_NAME}
         bodyInstance.cpp
         topology.cpp
         AABB.cpp
+        modelInit.cpp
 )
 
 

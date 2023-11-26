@@ -25,7 +25,7 @@ public:
 
     Object();
 
-    Object(const std::shared_ptr<Mesh>& mesh, EObjectType type, Shader shader);
+    Object(const std::shared_ptr<Mesh>& mesh, EObjectType type, Shader shader = Shader());
 
     void setTransformation(glm::vec3 location, glm::quat rotation);
 

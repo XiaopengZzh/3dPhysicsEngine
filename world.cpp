@@ -1,6 +1,17 @@
 
 #include "world.h"
 
+glm::vec3 gravityDirections[6] = {
+        glm::vec3(0.0f, -1.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec3(-1.0f, 0.0f, 0.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        glm::vec3(0.0f, 0.0f, 1.0)
+};
+
+glm::vec3 gravity = gravityDirections[0] * GRAVITY_ACC;
+
 
 World::World()
 {
@@ -79,6 +90,7 @@ void World::initialValTags()
 
 void World::physicsRegistration()
 {
+    printf("registering physics.\n");
     auto size = ObjectsList.size();
 
     for(int idx = 0; idx < size; idx++)
@@ -125,15 +137,7 @@ void World::simulate(float dt)
     pairlist potentialCollidedPairs = broadPhase();
 
     // narrow phase
-    /*
-    glm::vec3 mtv;
-    if(narrowCheck(0, 10, mtv))
-    {
-        glm::vec3 contactPt = calcContactPoint(mtv, 0, 10);
-        resolvePenetration(mtv, 0, 10);
-        collisionResponseInternal(mtv, 0, 10, contactPt);
-    }
-     */
+
     collisionInfolist collidedPairs = narrowPhase(potentialCollidedPairs);
     collisionResponse(collidedPairs);
 }
@@ -161,6 +165,8 @@ void World::collisionResponse(collisionInfolist &collInfolist)
         resolvePenetration(collInfolist.mtvList[idx], collInfolist.collidedPairs[idx].first, collInfolist.collidedPairs[idx].second);
         collisionResponseInternal(collInfolist.mtvList[idx], collInfolist.collidedPairs[idx].first, collInfolist.collidedPairs[idx].second, contactPt);
     }
+
+    resolveClipping();
 }
 
 
@@ -171,6 +177,9 @@ collisionInfolist World::narrowPhase(pairlist &potentialCollidedPairs)
     collisionInfolist res;
     for(auto& potentialPair : potentialCollidedPairs)
     {
+        if(bodyInstances[potentialPair.first].objectType == EObjectType::STATIC &&
+        bodyInstances[potentialPair.second].objectType == EObjectType::STATIC)
+            continue;
         glm::vec3 mtv;
         if(narrowCheck(potentialPair.first, potentialPair.second, mtv))
         {
@@ -190,7 +199,7 @@ void World::integration(float dt)
     {
         if(bodyInstances[idx].objectType == EObjectType::STATIC) continue;
 
-        bodyInstances[idx].pendingLinearImpulse += bodyInstances[idx].collision->mass * glm::vec3(0.0f, -GRAVITY_ACC, 0.0f) * dt;
+        bodyInstances[idx].pendingLinearImpulse += bodyInstances[idx].collision->mass * gravity * dt;
 
         movements[idx].momentum += bodyInstances[idx].pendingLinearImpulse;
         movements[idx].angularMomentum += bodyInstances[idx].pendingAngularImpulse;
@@ -208,6 +217,7 @@ void World::integration(float dt)
         // refresh pending impulse
         bodyInstances[idx].pendingLinearImpulse = glm::vec3(0.0f);
         bodyInstances[idx].pendingAngularImpulse = glm::vec3(0.0f);
+
     }
 
 }
@@ -225,27 +235,9 @@ void World::syncTransform()
 
 bool World::narrowCheck(unsigned int idx1, unsigned int idx2, glm::vec3& minimalTranslationVector)
 {
-    // colliders
-    /*
-    std::vector<glm::vec3> coll1;
-    std::vector<glm::vec3> coll2;
-    coll1.reserve(bodyInstances[idx1].collision->collisionVertices.size());
-    coll2.reserve(bodyInstances[idx2].collision->collisionVertices.size());
-
-    for(auto &v : bodyInstances[idx1].collision->collisionVertices)
-    {
-        glm::quat v_quat(0.0f, v.x, v.y, v.z);
-        glm::quat rotated_quat = transforms[idx1].rotation * v_quat * glm::conjugate(transforms[idx1].rotation);
-        coll1.push_back(glm::vec3(rotated_quat.x, rotated_quat.y, rotated_quat.z) + transforms[idx1].position);
-    }
-
-    for(auto &v : bodyInstances[idx2].collision->collisionVertices)
-    {
-        glm::quat v_quat(0.0f, v.x, v.y, v.z);
-        glm::quat rotated_quat = transforms[idx2].rotation * v_quat * glm::conjugate(transforms[idx2].rotation);
-        coll2.push_back(glm::vec3(rotated_quat.x, rotated_quat.y, rotated_quat.z) + transforms[idx2].position);
-    }
-    */
+    if(bodyInstances[idx1].objectType == EObjectType::STATIC &&
+       bodyInstances[idx2].objectType == EObjectType::STATIC)
+        return false;
     //simplex
     glm::vec3 a, b, c, d;
     glm::vec3 searchDir = transforms[idx1].position - transforms[idx2].position;
@@ -352,7 +344,9 @@ int World::supportRetDiff(glm::vec3 dir, unsigned int idx, float& diff)
 
 
 
-glm::vec3 World::EPA(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, unsigned int idx1, unsigned int idx2){
+glm::vec3 World::EPA(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, unsigned int idx1, unsigned int idx2)
+{
+    glm::vec3 res;
     glm::vec3 faces[EPA_MAX_NUM_FACES][4]; //Array of faces, each with 3 verts and a normal
 
     //Init with final simplex from GJK
@@ -394,7 +388,10 @@ glm::vec3 World::EPA(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, unsigne
 
         if(glm::dot(p, search_dir)-min_dist<EPA_TOLERANCE){
             //Convergence (new point is not significantly further from origin)
-            return faces[closest_face][3]* glm::dot(p, search_dir); //dot vertex with normal to resolve collision along normal!
+            res = faces[closest_face][3]* glm::dot(p, search_dir);
+            if(res == glm::vec3(0.0f))
+                res = faces[closest_face][3] * 0.01f;
+            return res; //dot vertex with normal to resolve collision along normal!
         }
 
         glm::vec3 loose_edges[EPA_MAX_NUM_LOOSE_EDGES][2]; //keep track of edges we need to fix after removing faces
@@ -469,7 +466,8 @@ glm::vec3 World::EPA(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, unsigne
 
     std::cout << "EPA did not converge. " << std::endl;
     //Return most recent closest point
-    return faces[closest_face][3] * glm::dot(faces[closest_face][0], faces[closest_face][3]);
+    res = faces[closest_face][3] * glm::dot(faces[closest_face][0], faces[closest_face][3]);
+    return res;
 }
 
 // Todo : if both objects are static, stop collision detection
@@ -507,6 +505,10 @@ glm::vec3 World::calcContactPoint(glm::vec3 minimalTranslationalVector, unsigned
 // call resolvePenetration after calcContactPoint
 void World::resolvePenetration(glm::vec3 minimalTranslationalVector, unsigned int idx1, unsigned int idx2)
 {
+    if(bodyInstances[idx1].objectType == EObjectType::STATIC &&
+       bodyInstances[idx2].objectType == EObjectType::STATIC)
+        return;
+
     float factor1 = (bodyInstances[idx1].objectType == EObjectType::STATIC ? 0.0f : 1.0f);
     float factor2 = (bodyInstances[idx2].objectType == EObjectType::STATIC ? 0.0f : 1.0f);
 
@@ -515,6 +517,7 @@ void World::resolvePenetration(glm::vec3 minimalTranslationalVector, unsigned in
 
     transforms[idx1].position += minimalTranslationalVector * (mass1 / (mass1 + mass2));
     transforms[idx2].position -= minimalTranslationalVector * (mass2 / (mass1 + mass2));
+
 }
 
 void World::collisionResponseInternal(glm::vec3 mtv, unsigned int idx1, unsigned int idx2, glm::vec3 contactPt)
@@ -572,6 +575,19 @@ void World::collisionResponseInternal(glm::vec3 mtv, unsigned int idx1, unsigned
 
 }
 
+void World::resolveClipping()
+{
+    unsigned int size = transforms.size();
+    for(unsigned int idx = 0; idx < size; idx++)
+    {
+        if(transforms[idx].position.x > BOUNDARY || transforms[idx].position.x < -BOUNDARY ||
+        transforms[idx].position.y > BOUNDARY || transforms[idx].position.y < -BOUNDARY ||
+        transforms[idx].position.z > BOUNDARY || transforms[idx].position.z < -BOUNDARY)
+            transforms[idx].position = glm::vec3(0.0f);
+    }
+}
+
+
 void World::updateAABBs()
 {
     unsigned int size = bodyInstances.size();
@@ -591,6 +607,7 @@ void World::updateAABBs()
             vmax.x = std::max(vmax.x, vec.x);
             vmax.y = std::max(vmax.y, vec.y);
             vmax.z = std::max(vmax.z, vec.z);
+
         }
         AABBlist[idx].vmin = vmin;
         AABBlist[idx].vmax = vmax;

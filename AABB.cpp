@@ -13,7 +13,7 @@ bool AABB::intersect(const AABB &a, const AABB &b)
 
 void insertionSort(std::vector<valTag>& list)
 {
-    unsigned int i, j;
+    int i, j;
     valTag key;
     unsigned int size = list.size();
     for(i = 1; i < size; i++)

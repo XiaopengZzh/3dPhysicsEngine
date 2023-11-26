@@ -15,13 +15,13 @@ Object::Object()
 
 
 Object::Object(const std::shared_ptr<Mesh>& mesh, EObjectType type, Shader shader)
+: meshInstance(mesh),
+  objectType(type),
+  shaderInstance(shader),
+  location(glm::vec3(0.0f)),
+  rotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
 {
-    meshInstance = mesh;
-    objectType = type;
-    shaderInstance = shader;
 
-    location = glm::vec3(0.0f);
-    rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 }
 
 void Object::setTransformation(glm::vec3 _location, glm::quat _rotation)

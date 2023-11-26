@@ -9,6 +9,7 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 #include "macros.h"
 #include "Object.h"
 #include "camera.h"
@@ -21,7 +22,6 @@
 #include "glm/gtx/quaternion.hpp"
 #include "topology.h"
 #include "AABB.h"
-
 
 class World
 {
@@ -39,7 +39,7 @@ public:
 
     void Init();
 
-    void CreateObject(std::shared_ptr<Mesh> mesh, EObjectType type, Shader shader);
+    void CreateObject(std::shared_ptr<Mesh> mesh, EObjectType type, Shader shader = Shader());
 
     void Draw(Camera &cam);
 
@@ -74,6 +74,8 @@ public:
 
     void collisionResponseInternal(glm::vec3 mtv, unsigned int idx1, unsigned int idx2, glm::vec3 contactPt);
 
+    void resolveClipping();
+
     void syncTransform();
 
     void updateAABBs();
@@ -81,6 +83,7 @@ public:
     void updateValTag();
 
     std::vector<Object> ObjectsList;
+    std::vector<std::shared_ptr<Mesh>> meshList;
 
     // ECS, stores transform and movement information of all physics instance in one block of memory
     std::vector<TransformComponent> transforms;

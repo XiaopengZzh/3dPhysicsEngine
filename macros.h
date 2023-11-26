@@ -16,7 +16,7 @@
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-#define GRAVITY_ACC 0.08f
+#define GRAVITY_ACC 1.2f
 #define ZNEAR 0.1f
 #define ZFAR 1000.0f
 
@@ -25,6 +25,6 @@ const unsigned int SCR_HEIGHT = 600;
 #define EPA_MAX_NUM_FACES 64
 #define EPA_MAX_NUM_LOOSE_EDGES 32
 #define EPA_MAX_NUM_ITERATIONS 64
-
+#define BOUNDARY 1000000.0f
 
 #endif //MACROS_H
