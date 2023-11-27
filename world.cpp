@@ -180,15 +180,9 @@ void World::collisionResponse(collisionInfolist &collInfolist)
 
     for(unsigned int idx = 0; idx < size; idx++)
     {
-        #pragma omp task
-        {
-            glm::vec3 contactPt = calcContactPoint(collInfolist.mtvList[idx], collInfolist.collidedPairs[idx].first,
-                                                   collInfolist.collidedPairs[idx].second);
-            resolvePenetration(collInfolist.mtvList[idx], collInfolist.collidedPairs[idx].first,
-                               collInfolist.collidedPairs[idx].second);
-            collisionResponseInternal(collInfolist.mtvList[idx], collInfolist.collidedPairs[idx].first,
-                                      collInfolist.collidedPairs[idx].second, contactPt);
-        }
+        glm::vec3 contactPt = calcContactPoint(collInfolist.mtvList[idx], collInfolist.collidedPairs[idx].first, collInfolist.collidedPairs[idx].second);
+        resolvePenetration(collInfolist.mtvList[idx], collInfolist.collidedPairs[idx].first, collInfolist.collidedPairs[idx].second);
+        collisionResponseInternal(collInfolist.mtvList[idx], collInfolist.collidedPairs[idx].first, collInfolist.collidedPairs[idx].second, contactPt);
     }
 
     resolveClipping();
@@ -220,38 +214,31 @@ collisionInfolist World::narrowPhase(pairlist &potentialCollidedPairs)
 void World::integration(float dt)
 {
     int size = ObjectsList.size();
-
     for(int idx = 0; idx < size; idx++)
     {
-        #pragma omp task
-        {
-            if (bodyInstances[idx].objectType != EObjectType::STATIC) {
+        if(bodyInstances[idx].objectType == EObjectType::STATIC) continue;
 
-                bodyInstances[idx].pendingLinearImpulse += bodyInstances[idx].collision->mass * gravity * dt;
+        bodyInstances[idx].pendingLinearImpulse += bodyInstances[idx].collision->mass * gravity * dt;
 
-                movements[idx].momentum += bodyInstances[idx].pendingLinearImpulse;
-                movements[idx].angularMomentum += bodyInstances[idx].pendingAngularImpulse;
+        movements[idx].momentum += bodyInstances[idx].pendingLinearImpulse;
+        movements[idx].angularMomentum += bodyInstances[idx].pendingAngularImpulse;
 
-                transforms[idx].position +=
-                        dt * (movements[idx].momentum * 2.0f - bodyInstances[idx].pendingLinearImpulse) /
-                        (2.0f * bodyInstances[idx].collision->mass);
+        transforms[idx].position += dt * (movements[idx].momentum * 2.0f - bodyInstances[idx].pendingLinearImpulse) / (2.0f * bodyInstances[idx].collision->mass);
 
-                // calculate rotation
-                glm::mat3 Rot = glm::toMat3(transforms[idx].rotation);
-                glm::vec3 angularVelocity = glm::transpose(Rot) * bodyInstances[idx].collision->inertiaTensorInv *
-                                            Rot * (movements[idx].angularMomentum -
-                                                   bodyInstances[idx].pendingAngularImpulse / 2.0f);
-                //glm::vec3 angularVelocity =
-                glm::quat newRot = transforms[idx].rotation +
-                                   transforms[idx].rotation * glm::exp(0.5f * glm::quat(0.0f, angularVelocity * dt));
-                transforms[idx].rotation = glm::normalize(newRot);
+        // calculate rotation
+        glm::mat3 Rot = glm::toMat3(transforms[idx].rotation);
+        glm::vec3 angularVelocity = glm::transpose(Rot) * bodyInstances[idx].collision->inertiaTensorInv *
+                Rot * (movements[idx].angularMomentum - bodyInstances[idx].pendingAngularImpulse / 2.0f);
+        //glm::vec3 angularVelocity =
+        glm::quat newRot = transforms[idx].rotation + transforms[idx].rotation * glm::exp(0.5f * glm::quat(0.0f, angularVelocity * dt));
+        transforms[idx].rotation = glm::normalize(newRot);
 
-                // refresh pending impulse
-                bodyInstances[idx].pendingLinearImpulse = glm::vec3(0.0f);
-                bodyInstances[idx].pendingAngularImpulse = glm::vec3(0.0f);
-            }
-        }
+        // refresh pending impulse
+        bodyInstances[idx].pendingLinearImpulse = glm::vec3(0.0f);
+        bodyInstances[idx].pendingAngularImpulse = glm::vec3(0.0f);
+
     }
+
 }
 
 
@@ -625,26 +612,24 @@ void World::updateAABBs()
     unsigned int size = bodyInstances.size();
     for(unsigned int idx = 0; idx < size; idx++)
     {
-        #pragma omp task
+        glm::vec3 vmin(std::numeric_limits<float>::max());
+        glm::vec3 vmax(std::numeric_limits<float>::lowest());
+
+        std::vector<glm::vec3> vertices = bodyInstances[idx].collision->collisionVertices;
+        for(auto &vec : vertices)
         {
-            glm::vec3 vmin(std::numeric_limits<float>::max());
-            glm::vec3 vmax(std::numeric_limits<float>::lowest());
+            vec = transforms[idx].rotation * vec + transforms[idx].position;
+            vmin.x = std::min(vmin.x, vec.x);
+            vmin.y = std::min(vmin.y, vec.y);
+            vmin.z = std::min(vmin.z, vec.z);
 
-            std::vector<glm::vec3> vertices = bodyInstances[idx].collision->collisionVertices;
-            for (auto &vec: vertices) {
-                vec = transforms[idx].rotation * vec + transforms[idx].position;
-                vmin.x = std::min(vmin.x, vec.x);
-                vmin.y = std::min(vmin.y, vec.y);
-                vmin.z = std::min(vmin.z, vec.z);
+            vmax.x = std::max(vmax.x, vec.x);
+            vmax.y = std::max(vmax.y, vec.y);
+            vmax.z = std::max(vmax.z, vec.z);
 
-                vmax.x = std::max(vmax.x, vec.x);
-                vmax.y = std::max(vmax.y, vec.y);
-                vmax.z = std::max(vmax.z, vec.z);
-
-            }
-            AABBlist[idx].vmin = vmin;
-            AABBlist[idx].vmax = vmax;
         }
+        AABBlist[idx].vmin = vmin;
+        AABBlist[idx].vmax = vmax;
     }
 }
 

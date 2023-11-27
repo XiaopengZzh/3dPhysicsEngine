@@ -33,8 +33,8 @@ extern float time_integration;
 // default input values
 unsigned int thread_count = 24;
 float totalRunTime = 60.0f;
-unsigned int cubeNum = 2500;
-unsigned int tetraNum = 500;
+unsigned int cubeNum = 150;
+unsigned int tetraNum = 50;
 float gravityReverseInterval = 15.0f;
 
 int main(int argc, char* argv[])
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     printf("======================================================\n");
     printf("logical cores count : %u\n", logicalCores);
     printf("Thread count : %u\n", thread_count);
-    printf("planed run time : %f\n", totalRunTime);
+    printf("total run time : %f\n", totalRunTime);
     printf("number of spawned cubes : %d\n", cubeNum);
     printf("number of spawned tetrahedrons : %d\n", tetraNum);
     printf("interval to reverse gravity : %f\n", gravityReverseInterval);
@@ -161,7 +161,6 @@ int main(int argc, char* argv[])
     printf("simulation ends.\n");
     printf("======================================================\n");
     printf("frames number in total : %d\n", totalFrameCount);
-    printf("real run time : %f\n", elapsedTime);
     printf("fps : %f \n", float(totalFrameCount) / elapsedTime);
     printf("time consumed in integration : %f\n", time_integration);
     printf("time consumed in broad phase : %f\n", time_broadphase);
