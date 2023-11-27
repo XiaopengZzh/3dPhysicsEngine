@@ -31,10 +31,10 @@ extern float time_narrowphase;
 extern float time_integration;
 
 // default input values
-unsigned int thread_count = 256;
+unsigned int thread_count = 64;
 float totalRunTime = 60.0f;
-unsigned int cubeNum = 2000;
-unsigned int tetraNum = 1000;
+unsigned int cubeNum = 20;
+unsigned int tetraNum = 10;
 float gravityReverseInterval = 15.0f;
 
 int main(int argc, char* argv[])

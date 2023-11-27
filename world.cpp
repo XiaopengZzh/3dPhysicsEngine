@@ -139,10 +139,12 @@ void World::simulate(float dt)
 
     // broad phase
 
+    timeTag1 = std::chrono::high_resolution_clock::now();
+
     updateAABBs();
     updateValTag();
 
-    timeTag1 = std::chrono::high_resolution_clock::now();
+
     pairlist potentialCollidedPairs = broadPhase();
     timeTag2 = std::chrono::high_resolution_clock::now();
     auto broadPhaseDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag2 - timeTag1);
@@ -180,14 +182,16 @@ void World::collisionResponse(collisionInfolist &collInfolist)
 
     for(unsigned int idx = 0; idx < size; idx++)
     {
-        #pragma omp task
+        glm::vec3 _mtv = collInfolist.mtvList[idx];
+        std::pair<unsigned int, unsigned int> _pair = collInfolist.collidedPairs[idx];
+        #pragma omp task firstprivate(_mtv, _pair)
         {
-            glm::vec3 contactPt = calcContactPoint(collInfolist.mtvList[idx], collInfolist.collidedPairs[idx].first,
-                                                   collInfolist.collidedPairs[idx].second);
-            resolvePenetration(collInfolist.mtvList[idx], collInfolist.collidedPairs[idx].first,
-                               collInfolist.collidedPairs[idx].second);
-            collisionResponseInternal(collInfolist.mtvList[idx], collInfolist.collidedPairs[idx].first,
-                                      collInfolist.collidedPairs[idx].second, contactPt);
+
+            glm::vec3 contactPt = calcContactPoint(_mtv, _pair.first, _pair.second);
+
+            resolvePenetration(_mtv, _pair.first, _pair.second);
+
+            collisionResponseInternal(_mtv, _pair.first, _pair.second, contactPt);
         }
     }
 
@@ -201,18 +205,17 @@ collisionInfolist World::narrowPhase(pairlist &potentialCollidedPairs)
 {
     collisionInfolist res;
     unsigned int size = potentialCollidedPairs.size();
-    for(unsigned int idx = 0; idx < size; idx++)
+    for(auto pair : potentialCollidedPairs)
     {
-        #pragma omp task
+        #pragma omp task firstprivate(pair)
         {
-            auto potentialPair = potentialCollidedPairs[idx];
-            if (bodyInstances[potentialPair.first].objectType != EObjectType::STATIC ||
-                bodyInstances[potentialPair.second].objectType != EObjectType::STATIC) {
+            if (bodyInstances[pair.first].objectType != EObjectType::STATIC ||
+                bodyInstances[pair.second].objectType != EObjectType::STATIC) {
                 glm::vec3 mtv;
-                if (narrowCheck(potentialPair.first, potentialPair.second, mtv)) {
+                if (narrowCheck(pair.first, pair.second, mtv)) {
                     #pragma omp critical
                     {
-                        res.collidedPairs.push_back(potentialPair);
+                        res.collidedPairs.push_back(pair);
                         res.mtvList.push_back(mtv);
                     }
                 }

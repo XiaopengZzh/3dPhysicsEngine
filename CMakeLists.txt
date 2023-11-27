@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.22)
 
 project(3dPhysicsEngine)
 
@@ -12,6 +12,8 @@ find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
 endif ()
+
+#add_compile_options(-Wall)
 
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -27,6 +29,7 @@ target_sources(${PROJECT_NAME}
         AABB.h
         modelInit.h
         hardwareInfo.h
+        shader.h
 )
 
 target_sources(${PROJECT_NAME}
@@ -39,6 +42,7 @@ target_sources(${PROJECT_NAME}
         AABB.cpp
         modelInit.cpp
         hardwareInfo.cpp
+        shader.cpp
 )
 
 
@@ -56,12 +60,10 @@ if(APPLE OR WIN32)
     target_sources(${PROJECT_NAME}
         PRIVATE
             glad.c
-            shader.cpp
             renderInit.cpp
     )
     target_sources(${PROJECT_NAME}
         PRIVATE
-            shader.h
             stb_image.h
             camera.h
             renderInit.h

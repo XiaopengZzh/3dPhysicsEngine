@@ -38,9 +38,11 @@ void insertionSort(std::vector<valTag>& list, int start, int end)
 
 void parallelSort(std::vector<valTag>& list, unsigned int threads_count, unsigned int chunkSize)
 {
+    // making list to be shared will not lose performance since different tasks deal with different parts of the list
+    // They will not access the same number so no synchronization is triggered here.
     for(unsigned int i = 0; i < threads_count; i++)
     {
-        #pragma omp task
+        #pragma omp task shared(list)
         {
             insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
         }
@@ -49,7 +51,7 @@ void parallelSort(std::vector<valTag>& list, unsigned int threads_count, unsigne
 
     for (int i = 0; i < threads_count - 1; i++)
     {
-        #pragma omp task
+        #pragma omp task shared(list)
         {
             insertionSort(list, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
         }
@@ -58,7 +60,7 @@ void parallelSort(std::vector<valTag>& list, unsigned int threads_count, unsigne
 
     for(unsigned int i = 0; i < threads_count; i++)
     {
-        #pragma omp task
+        #pragma omp task shared(list)
         {
             insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
         }
@@ -67,7 +69,7 @@ void parallelSort(std::vector<valTag>& list, unsigned int threads_count, unsigne
 
     for (int i = 0; i < threads_count - 1; i++)
     {
-        #pragma omp task
+        #pragma omp task shared(list)
         {
             insertionSort(list, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
         }
@@ -76,7 +78,7 @@ void parallelSort(std::vector<valTag>& list, unsigned int threads_count, unsigne
 
     for(unsigned int i = 0; i < threads_count; i++)
     {
-        #pragma omp task
+        #pragma omp task shared(list)
         {
             insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
         }
@@ -99,7 +101,7 @@ void parallelSort(std::vector<valTag>& list, unsigned int threads_count, unsigne
 
     for (int i = 0; i < threads_count - 1; i++)
     {
-#pragma omp task
+#pragma omp task shared(list)
         {
             insertionSort(list, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
         }
@@ -108,7 +110,7 @@ void parallelSort(std::vector<valTag>& list, unsigned int threads_count, unsigne
 
     for(unsigned int i = 0; i < threads_count; i++)
     {
-#pragma omp task
+#pragma omp task shared(list)
         {
             insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
         }
@@ -132,7 +134,7 @@ void parallelSort(std::vector<valTag>& list, unsigned int threads_count, unsigne
 
     for (int i = 0; i < threads_count - 1; i++)
     {
-#pragma omp task
+#pragma omp task shared(list)
         {
             insertionSort(list, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
         }
@@ -141,7 +143,7 @@ void parallelSort(std::vector<valTag>& list, unsigned int threads_count, unsigne
 
     for(unsigned int i = 0; i < threads_count; i++)
     {
-#pragma omp task
+#pragma omp task shared(list)
         {
             insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
         }

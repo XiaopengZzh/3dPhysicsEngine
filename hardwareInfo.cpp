@@ -41,6 +41,10 @@ DWORD CountSetBits(ULONG_PTR bitMask)
 #include <fstream>
 #include <string>
 #include <set>
+
+#define _GNU_SOURCE
+#include <sched.h>
+int sched_getcpu(void);
 #endif
 
 bool getLogicalProcessorsCount(unsigned int &logicalPcount)
@@ -170,6 +174,7 @@ bool getLogicalProcessorsCount(unsigned int &logicalPcount)
 
 #if defined(__linux__)
 
+    /*
     std::ifstream cpuinfo("/proc/cpuinfo");
     std::string line;
     std::set<int> cores;
@@ -185,6 +190,9 @@ bool getLogicalProcessorsCount(unsigned int &logicalPcount)
         return true;
     else
         return false;
+    */
+    logicalPcount = omp_get_num_procs();
+    return true;
 
 #endif
 
