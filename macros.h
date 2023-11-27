@@ -3,7 +3,7 @@
 #ifndef MACROS_H
 #define MACROS_H
 
-#define FORCE_DISABLE_RENDER 0
+#define FORCE_DISABLE_RENDER 1
 
 
 #if (defined(_WIN64) || defined(__WIN32) || defined(__APPLE__)) && (FORCE_DISABLE_RENDER == 0)
