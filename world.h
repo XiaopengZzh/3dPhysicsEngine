@@ -100,9 +100,6 @@ public:
     std::vector<valTag> flagsY;
     std::vector<valTag> flagsZ;
 
-    unsigned int threadCount;
-    unsigned int chunkSize;
-
 private:
 
     World();

@@ -11,23 +11,17 @@ bool AABB::intersect(const AABB &a, const AABB &b)
 }
 
 
-void insertionSort(std::vector<valTag>& list, int start, int end)
+void insertionSort(std::vector<valTag>& list)
 {
-    if(end >= list.size())
-        end = list.size() - 1;
-
-    int i = start + 1;
-    int j;
-
+    int i, j;
     valTag key;
-
-    //unsigned int size = list.size();
-    for(; i < end + 1; i++)
+    unsigned int size = list.size();
+    for(i = 1; i < size; i++)
     {
         key = list[i];
         j = i - 1;
 
-        while(j >= start && list[j].value > key.value)
+        while(j >= 0 && list[j].value > key.value)
         {
             list[j + 1] = list[j];
             j = j - 1;
@@ -36,121 +30,6 @@ void insertionSort(std::vector<valTag>& list, int start, int end)
     }
 }
 
-void parallelSort(std::vector<valTag>& list, unsigned int threads_count, unsigned int chunkSize)
-{
-    for(unsigned int i = 0; i < threads_count; i++)
-    {
-        #pragma omp task
-        {
-            insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
-        }
-    }
-    #pragma omp taskwait
-
-    for (int i = 0; i < threads_count - 1; i++)
-    {
-        #pragma omp task
-        {
-            insertionSort(list, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
-        }
-    }
-    #pragma omp taskwait
-
-    for(unsigned int i = 0; i < threads_count; i++)
-    {
-        #pragma omp task
-        {
-            insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
-        }
-    }
-    #pragma omp taskwait
-
-    for (int i = 0; i < threads_count - 1; i++)
-    {
-        #pragma omp task
-        {
-            insertionSort(list, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
-        }
-    }
-    #pragma omp taskwait
-
-    for(unsigned int i = 0; i < threads_count; i++)
-    {
-        #pragma omp task
-        {
-            insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
-        }
-    }
-    #pragma omp taskwait
-
-    for (int i = 1; i < threads_count; i++) {
-        int j = 0;
-        while (list[i * chunkSize + j].value <= list[(i - 1) * chunkSize].value && j < chunkSize) {
-            int k = chunkSize * i - 1 + j;
-            valTag key = list[i * chunkSize + j];
-            while (k >= 0 && list[k].value > key.value) {
-                list[k + 1] = list[k];
-                k--;
-            }
-            list[k + 1] = key;
-            j++;
-        }
-    }
-
-    for (int i = 0; i < threads_count - 1; i++)
-    {
-#pragma omp task
-        {
-            insertionSort(list, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
-        }
-    }
-#pragma omp taskwait
-
-    for(unsigned int i = 0; i < threads_count; i++)
-    {
-#pragma omp task
-        {
-            insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
-        }
-    }
-#pragma omp taskwait
-
-    for (int i = threads_count - 2; i > 0; i--) {
-        int j = 0;
-        while (list[i * chunkSize - 1 - j].value > list[i * chunkSize - 1 + chunkSize / 2].value &&
-               j < chunkSize) {
-            int k = i * chunkSize - j;
-            valTag key = list[i * chunkSize - 1 - j];
-            while (k < list.size() && list[k].value < key.value) {
-                list[k - 1] = list[k];
-                k++;
-            }
-            list[k - 1] = key;
-            j++;
-        }
-    }
-
-    for (int i = 0; i < threads_count - 1; i++)
-    {
-#pragma omp task
-        {
-            insertionSort(list, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
-        }
-    }
-#pragma omp taskwait
-
-    for(unsigned int i = 0; i < threads_count; i++)
-    {
-#pragma omp task
-        {
-            insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
-        }
-    }
-#pragma omp taskwait
-
-    insertionSort(list, 0, list.size() - 1);
-
-}
 
 
 

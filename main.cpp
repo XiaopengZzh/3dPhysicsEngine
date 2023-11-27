@@ -31,10 +31,10 @@ extern float time_narrowphase;
 extern float time_integration;
 
 // default input values
-unsigned int thread_count = 1;
+unsigned int thread_count = 24;
 float totalRunTime = 60.0f;
-unsigned int cubeNum = 200;
-unsigned int tetraNum = 50;
+unsigned int cubeNum = 2500;
+unsigned int tetraNum = 500;
 float gravityReverseInterval = 15.0f;
 
 int main(int argc, char* argv[])
@@ -94,10 +94,6 @@ int main(int argc, char* argv[])
     movementsInit();
 
     // =========================================================================//
-
-    world->threadCount = thread_count;
-    // ceil(total num / thread_count)
-    world->chunkSize = (cubeNum + tetraNum + 6 + thread_count - 1) / thread_count;
 
     auto startTime = std::chrono::high_resolution_clock::now();
     auto currentTime = startTime;
