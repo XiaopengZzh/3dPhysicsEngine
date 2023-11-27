@@ -1,16 +1,17 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-
-
+#include "macros.h"
+#if RENDER_ENABLED
 #include <glad/glad.h>
+#endif
 #include <fstream>
 #include <sstream>
 #include <iostream>
 
 #include "glm/glm.hpp"
 
-#include "macros.h"
+
 
 
 class Shader
@@ -18,7 +19,7 @@ class Shader
 public:
 
     // the shader program ID
-    GLuint ID;
+    unsigned int ID;
 
     Shader();
 

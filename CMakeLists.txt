@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.22)
 
 project(3dPhysicsEngine)
 
@@ -21,6 +21,7 @@ target_sources(${PROJECT_NAME}
         topology.h
         AABB.h
         modelInit.h
+        shader.h
 )
 
 target_sources(${PROJECT_NAME}
@@ -32,6 +33,7 @@ target_sources(${PROJECT_NAME}
         topology.cpp
         AABB.cpp
         modelInit.cpp
+        shader.cpp
 )
 
 
@@ -49,12 +51,10 @@ if(APPLE OR WIN32)
     target_sources(${PROJECT_NAME}
         PRIVATE
             glad.c
-            shader.cpp
             renderInit.cpp
     )
     target_sources(${PROJECT_NAME}
         PRIVATE
-            shader.h
             stb_image.h
             camera.h
             renderInit.h
