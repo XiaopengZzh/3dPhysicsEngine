@@ -18,8 +18,10 @@ extern float deltaTime, lastFrame;
 #include <cstdlib>
 #include <cstdio>
 #include <chrono>
+#include "omp.h"
 #include "world.h"
 #include "modelInit.h"
+#include "hardwareInfo.h"
 
 extern glm::vec3 gravity;
 extern glm::vec3 gravityDirections[6];
@@ -29,7 +31,7 @@ extern float time_narrowphase;
 extern float time_integration;
 
 // default input values
-unsigned int thread_count = 1;
+unsigned int thread_count = 24;
 float totalRunTime = 60.0f;
 unsigned int cubeNum = 150;
 unsigned int tetraNum = 50;
@@ -54,7 +56,14 @@ int main(int argc, char* argv[])
             gravityReverseInterval = strtof(argv[++idx], nullptr);
     }
 
+    unsigned int logicalCores = 1;
+    if(getLogicalProcessorsCount(logicalCores))
+        thread_count = (thread_count > logicalCores ? logicalCores : thread_count);
+
+    omp_set_num_threads(thread_count);
+
     printf("======================================================\n");
+    printf("logical cores count : %u\n", logicalCores);
     printf("Thread count : %u\n", thread_count);
     printf("total run time : %f\n", totalRunTime);
     printf("number of spawned cubes : %d\n", cubeNum);
@@ -102,51 +111,56 @@ int main(int argc, char* argv[])
 
     printf("simulation begins...\n");
 
-    while((!bShouldClose) && (elapsedTime < totalRunTime))
+    #pragma omp parallel
     {
-        currentTime = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - previousTime);
-        unsigned int dt_ms = duration.count();
-        dt = 0.001f * (dt_ms < 1 ? 1.0f : static_cast<float>(dt_ms));
-        previousTime = currentTime;
-
-        elapsedTime += dt;
-        if(elapsedTime > gravityChangeTag * gravityReverseInterval)
+        #pragma omp single
         {
-            gravity = gravityDirections[gravityChangeTag] * GRAVITY_ACC;
-            gravityChangeTag++;
-        }
+            while ((!bShouldClose) && (elapsedTime < totalRunTime)) {
+                currentTime = std::chrono::high_resolution_clock::now();
+                auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - previousTime);
+                unsigned int dt_ms = duration.count();
+                dt = 0.001f * (dt_ms < 1 ? 1.0f : static_cast<float>(dt_ms));
+                previousTime = currentTime;
 
-        world->simulate(dt);
+                elapsedTime += dt;
+                if (elapsedTime > gravityChangeTag * gravityReverseInterval) {
+                    gravity = gravityDirections[gravityChangeTag] * GRAVITY_ACC;
+                    gravityChangeTag++;
+                }
+
+                world->simulate(dt);
 
 #if RENDER_ENABLED
-        auto currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+                auto currentFrame = static_cast<float>(glfwGetTime());
+                deltaTime = currentFrame - lastFrame;
+                lastFrame = currentFrame;
 
-        // Process Input
-        processInput(window);
+                // Process Input
+                processInput(window);
 
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+                glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        world->Draw(camera);
+                world->Draw(camera);
 
-        // swap the color buffer used to render current iteration with the previous one and show it as output to screen
-        glfwSwapBuffers(window);
+                // swap the color buffer used to render current iteration with the previous one and show it as output to screen
+                glfwSwapBuffers(window);
 
-        // Check if any events are triggered(like keyboard inputs), updates the window state, calls the corresponding functions
-        glfwPollEvents();
+                // Check if any events are triggered(like keyboard inputs), updates the window state, calls the corresponding functions
+                glfwPollEvents();
 
-        bShouldClose = glfwWindowShouldClose(window);
+                bShouldClose = glfwWindowShouldClose(window);
 #endif
 
-        totalFrameCount++;
-    }
+                totalFrameCount++;
+            }
+        }   // pragma omp single
+    } // pragma omp parallel
 
     printf("simulation ends.\n");
     printf("======================================================\n");
+    printf("frames number in total : %d\n", totalFrameCount);
     printf("fps : %f \n", float(totalFrameCount) / elapsedTime);
     printf("time consumed in integration : %f\n", time_integration);
     printf("time consumed in broad phase : %f\n", time_broadphase);

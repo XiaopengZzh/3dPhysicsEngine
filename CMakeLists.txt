@@ -8,6 +8,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 11
     CXX_STANDARD_REQUIRED YES)
 
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
+endif ()
+
 target_sources(${PROJECT_NAME}
     PRIVATE
         macros.h
@@ -21,6 +26,7 @@ target_sources(${PROJECT_NAME}
         topology.h
         AABB.h
         modelInit.h
+        hardwareInfo.h
 )
 
 target_sources(${PROJECT_NAME}
@@ -32,6 +38,7 @@ target_sources(${PROJECT_NAME}
         topology.cpp
         AABB.cpp
         modelInit.cpp
+        hardwareInfo.cpp
 )
 
 

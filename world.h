@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <chrono>
+#include "omp.h"
 #include "macros.h"
 #include "Object.h"
 #include "camera.h"
