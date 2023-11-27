@@ -42,9 +42,7 @@ DWORD CountSetBits(ULONG_PTR bitMask)
 #include <string>
 #include <set>
 
-#define _GNU_SOURCE
-#include <sched.h>
-int sched_getcpu(void);
+#include <omp.h>
 #endif
 
 bool getLogicalProcessorsCount(unsigned int &logicalPcount)
