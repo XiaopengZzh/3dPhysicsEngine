@@ -200,16 +200,23 @@ void World::collisionResponse(collisionInfolist &collInfolist)
 collisionInfolist World::narrowPhase(pairlist &potentialCollidedPairs)
 {
     collisionInfolist res;
-    for(auto& potentialPair : potentialCollidedPairs)
+    unsigned int size = potentialCollidedPairs.size();
+    for(unsigned int idx = 0; idx < size; idx++)
     {
-        if(bodyInstances[potentialPair.first].objectType == EObjectType::STATIC &&
-        bodyInstances[potentialPair.second].objectType == EObjectType::STATIC)
-            continue;
-        glm::vec3 mtv;
-        if(narrowCheck(potentialPair.first, potentialPair.second, mtv))
+        #pragma omp task
         {
-            res.collidedPairs.push_back(potentialPair);
-            res.mtvList.push_back(mtv);
+            auto potentialPair = potentialCollidedPairs[idx];
+            if (bodyInstances[potentialPair.first].objectType != EObjectType::STATIC ||
+                bodyInstances[potentialPair.second].objectType != EObjectType::STATIC) {
+                glm::vec3 mtv;
+                if (narrowCheck(potentialPair.first, potentialPair.second, mtv)) {
+                    #pragma omp critical
+                    {
+                        res.collidedPairs.push_back(potentialPair);
+                        res.mtvList.push_back(mtv);
+                    }
+                }
+            }
         }
     }
     return res;
