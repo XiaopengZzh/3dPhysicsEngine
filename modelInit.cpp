@@ -73,8 +73,8 @@ void modelInit()
 #endif
     }
 
-    std::ifstream locfile("../data/initialLocations.txt");
-    std::ifstream rotfile("../data/initialRotations.txt");
+    std::ifstream locfile("../data/ManyPoints.txt");
+    std::ifstream rotfile("../data/ManyRots.txt");
 
     for(unsigned int idx = 0; idx < (cubeNum + tetraNum); idx++)
     {
@@ -134,7 +134,7 @@ void movementsInit()
 
     std::shared_ptr<World> world = World::GetWorldInstance();
 
-    std::ifstream in("../data/initialMovements.txt");
+    std::ifstream in("../data/ManyMovements.txt");
 
     for(unsigned int idx = 0; idx < (cubeNum + tetraNum); idx++)
     {
