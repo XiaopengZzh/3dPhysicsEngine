@@ -163,9 +163,9 @@ void World::simulate(float dt)
 
 pairlist World::broadPhase()
 {
-    insertionSort(flagsX);
-    insertionSort(flagsY);
-    insertionSort(flagsZ);
+    parallelSort(flagsX, threadCount, chunkSize);
+    parallelSort(flagsY, threadCount, chunkSize);
+    parallelSort(flagsZ, threadCount, chunkSize);
 
     // find all potential collided pair
     pairlist overlapsX = findOverlaps(flagsX);

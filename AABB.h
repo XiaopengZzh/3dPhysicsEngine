@@ -6,6 +6,7 @@
 
 #include "glm/glm.hpp"
 #include <vector>
+#include "omp.h"
 
 using pairlist = std::vector<std::pair<unsigned int, unsigned int>>;
 
@@ -50,7 +51,9 @@ public:
 
 };
 
-void insertionSort(std::vector<valTag>& list);
+void insertionSort(std::vector<valTag>& list, int start, int end);
+
+void parallelSort(std::vector<valTag>& list, unsigned int threads_count, unsigned int chunkSize);
 
 
 pairlist findOverlaps(std::vector<valTag>& taglist);
