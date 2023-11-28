@@ -42,48 +42,43 @@ void parallelSort(std::vector<valTag>& list, unsigned int threads_count, unsigne
     // They will not access the same number so no synchronization is triggered here.
     for(unsigned int i = 0; i < threads_count; i++)
     {
-        #pragma omp task shared(list)
-        {
+
+
             insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
-        }
+
     }
-    #pragma omp taskwait
+
 
     for (int i = 0; i < threads_count - 1; i++)
     {
-        #pragma omp task shared(list)
+
+            insertionSort(list, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
+
+    }
+
+
+    for(unsigned int i = 0; i < threads_count; i++)
+    {
+
+            insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
+
+    }
+
+
+    for (int i = 0; i < threads_count - 1; i++)
+    {
         {
             insertionSort(list, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
         }
     }
-    #pragma omp taskwait
+
 
     for(unsigned int i = 0; i < threads_count; i++)
     {
-        #pragma omp task shared(list)
-        {
             insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
-        }
-    }
-    #pragma omp taskwait
 
-    for (int i = 0; i < threads_count - 1; i++)
-    {
-        #pragma omp task shared(list)
-        {
-            insertionSort(list, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
-        }
     }
-    #pragma omp taskwait
 
-    for(unsigned int i = 0; i < threads_count; i++)
-    {
-        #pragma omp task shared(list)
-        {
-            insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
-        }
-    }
-    #pragma omp taskwait
 
     for (int i = 1; i < threads_count; i++) {
         int j = 0;
@@ -101,21 +96,18 @@ void parallelSort(std::vector<valTag>& list, unsigned int threads_count, unsigne
 
     for (int i = 0; i < threads_count - 1; i++)
     {
-#pragma omp task shared(list)
-        {
+
             insertionSort(list, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
-        }
+
     }
-#pragma omp taskwait
 
     for(unsigned int i = 0; i < threads_count; i++)
     {
-#pragma omp task shared(list)
-        {
+
             insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
-        }
+
     }
-#pragma omp taskwait
+
 
     for (int i = threads_count - 2; i > 0; i--) {
         int j = 0;
@@ -134,21 +126,18 @@ void parallelSort(std::vector<valTag>& list, unsigned int threads_count, unsigne
 
     for (int i = 0; i < threads_count - 1; i++)
     {
-#pragma omp task shared(list)
-        {
+
             insertionSort(list, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
-        }
+
     }
-#pragma omp taskwait
 
     for(unsigned int i = 0; i < threads_count; i++)
     {
-#pragma omp task shared(list)
-        {
+
             insertionSort(list, i * chunkSize, (i + 1) * chunkSize - 1);
-        }
+
     }
-#pragma omp taskwait
+
 
     insertionSort(list, 0, list.size() - 1);
 

@@ -115,27 +115,25 @@ int main(int argc, char* argv[])
 
     printf("simulation begins...\n");
 
-    #pragma omp parallel
+
+    while ((!bShouldClose) && (elapsedTime < totalRunTime))
     {
-        #pragma omp single
-        {
-            while ((!bShouldClose) && (elapsedTime < totalRunTime)) {
-                currentTime = std::chrono::high_resolution_clock::now();
-                auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - previousTime);
-                unsigned int dt_ms = duration.count();
-                dt = 0.001f * (dt_ms < 1 ? 1.0f : static_cast<float>(dt_ms));
-                previousTime = currentTime;
+        currentTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - previousTime);
+        unsigned int dt_ms = duration.count();
+        dt = 0.001f * (dt_ms < 1 ? 1.0f : static_cast<float>(dt_ms));
+        previousTime = currentTime;
 
-                elapsedTime += dt;
-                if (elapsedTime > gravityChangeTag * gravityReverseInterval) {
-                    gravity = gravityDirections[gravityChangeTag] * GRAVITY_ACC;
-                    gravityChangeTag++;
-                }
+        elapsedTime += dt;
+        if (elapsedTime > gravityChangeTag * gravityReverseInterval) {
+            gravity = gravityDirections[gravityChangeTag] * GRAVITY_ACC;
+            gravityChangeTag++;
+        }
 
-                world->simulate(dt);
+        world->simulate(dt);
 
 #if RENDER_ENABLED
-                auto currentFrame = static_cast<float>(glfwGetTime());
+        auto currentFrame = static_cast<float>(glfwGetTime());
                 deltaTime = currentFrame - lastFrame;
                 lastFrame = currentFrame;
 
@@ -157,10 +155,9 @@ int main(int argc, char* argv[])
                 bShouldClose = glfwWindowShouldClose(window);
 #endif
 
-                totalFrameCount++;
-            }
-        }   // pragma omp single
-    } // pragma omp parallel
+        totalFrameCount++;
+    }
+
 
     printf("simulation ends.\n");
     printf("======================================================\n");

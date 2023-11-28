@@ -127,40 +127,438 @@ void World::simulate(float dt)
     auto timeTag1 = std::chrono::high_resolution_clock::now();
     auto timeTag2 = timeTag1;
 
-    integration(dt);
+    int size = ObjectsList.size();
+#pragma omp parallel
+    {
 
-    timeTag2 = std::chrono::high_resolution_clock::now();
-    auto integrationDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag2 - timeTag1);
-    time_integration += integrationDuration.count() * 0.001f;
+
+#pragma omp for
+        for(int idx = 0; idx < ObjectsList.size(); idx++)
+        {
+            {
+                if (bodyInstances[idx].objectType != EObjectType::STATIC) {
+
+                    bodyInstances[idx].pendingLinearImpulse += bodyInstances[idx].collision->mass * gravity * dt;
+
+                    movements[idx].momentum += bodyInstances[idx].pendingLinearImpulse;
+                    movements[idx].angularMomentum += bodyInstances[idx].pendingAngularImpulse;
+
+                    transforms[idx].position +=
+                            dt * (movements[idx].momentum * 2.0f - bodyInstances[idx].pendingLinearImpulse) /
+                            (2.0f * bodyInstances[idx].collision->mass);
+
+                    // calculate rotation
+                    glm::mat3 Rot = glm::toMat3(transforms[idx].rotation);
+                    glm::vec3 angularVelocity = glm::transpose(Rot) * bodyInstances[idx].collision->inertiaTensorInv *
+                                                Rot * (movements[idx].angularMomentum -
+                                                       bodyInstances[idx].pendingAngularImpulse / 2.0f);
+                    //glm::vec3 angularVelocity =
+                    glm::quat newRot = transforms[idx].rotation +
+                                       transforms[idx].rotation * glm::exp(0.5f * glm::quat(0.0f, angularVelocity * dt));
+                    transforms[idx].rotation = glm::normalize(newRot);
+
+                    // refresh pending impulse
+                    bodyInstances[idx].pendingLinearImpulse = glm::vec3(0.0f);
+                    bodyInstances[idx].pendingAngularImpulse = glm::vec3(0.0f);
+                }
+            }
+        }
+
+#pragma omp single
+        {
+            timeTag2 = std::chrono::high_resolution_clock::now();
+            auto integrationDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag2 - timeTag1);
+            time_integration += integrationDuration.count() * 0.001f;
+
 
 #if RENDER_ENABLED
-    syncTransform();
+            syncTransform();
 #endif //RENDER_ENABLED
 
-    // broad phase
+            // broad phase
 
-    timeTag1 = std::chrono::high_resolution_clock::now();
+            timeTag1 = std::chrono::high_resolution_clock::now();
 
-    updateAABBs();
-    updateValTag();
+            unsigned int size = bodyInstances.size();
+        }
+#pragma omp for
+        for(unsigned int idx = 0; idx < size; idx++)
+        {
+                glm::vec3 vmin(std::numeric_limits<float>::max());
+                glm::vec3 vmax(std::numeric_limits<float>::lowest());
+
+                std::vector<glm::vec3> vertices = bodyInstances[idx].collision->collisionVertices;
+                for (auto &vec: vertices) {
+                    vec = transforms[idx].rotation * vec + transforms[idx].position;
+                    vmin.x = std::min(vmin.x, vec.x);
+                    vmin.y = std::min(vmin.y, vec.y);
+                    vmin.z = std::min(vmin.z, vec.z);
+
+                    vmax.x = std::max(vmax.x, vec.x);
+                    vmax.y = std::max(vmax.y, vec.y);
+                    vmax.z = std::max(vmax.z, vec.z);
+
+                }
+                AABBlist[idx].vmin = vmin;
+                AABBlist[idx].vmax = vmax;
+
+        }
+#pragma omp single
+        {
+            updateValTag();
+        }
+
+        //pairlist potentialCollidedPairs = broadPhase();
+
+        //====================
+#pragma omp for
+        for(unsigned int i = 0; i < threadCount; i++)
+        {
 
 
-    pairlist potentialCollidedPairs = broadPhase();
-    timeTag2 = std::chrono::high_resolution_clock::now();
-    auto broadPhaseDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag2 - timeTag1);
-    time_broadphase += broadPhaseDuration.count() * 0.001f;
-    // narrow phase
+            insertionSort(flagsX, i * chunkSize, (i + 1) * chunkSize - 1);
 
-    collisionInfolist collidedPairs = narrowPhase(potentialCollidedPairs);
-    timeTag1 = std::chrono::high_resolution_clock::now();
-    auto narrowPhaseDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag1 - timeTag2);
-    time_narrowphase += narrowPhaseDuration.count() * 0.001f;
-    // collision response
+        }
 
-    collisionResponse(collidedPairs);
-    timeTag2 = std::chrono::high_resolution_clock::now();
-    auto collisionResponseDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag2 - timeTag1);
-    time_collisionResponse += collisionResponseDuration.count() * 0.001f;
+#pragma omp for
+        for (int i = 0; i < threadCount - 1; i++)
+        {
+
+            insertionSort(flagsX, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp for
+        for(unsigned int i = 0; i < threadCount; i++)
+        {
+
+            insertionSort(flagsX, i * chunkSize, (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp for
+        for (int i = 0; i < threadCount - 1; i++)
+        {
+            {
+                insertionSort(flagsX, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
+            }
+        }
+
+#pragma omp for
+        for(unsigned int i = 0; i < threadCount; i++)
+        {
+            insertionSort(flagsX, i * chunkSize, (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp single
+        {
+            for (int i = 1; i < threadCount; i++) {
+                int j = 0;
+                while (flagsX[i * chunkSize + j].value <= flagsX[(i - 1) * chunkSize].value && j < chunkSize) {
+                    int k = chunkSize * i - 1 + j;
+                    valTag key = flagsX[i * chunkSize + j];
+                    while (k >= 0 && flagsX[k].value > key.value) {
+                        flagsX[k + 1] = flagsX[k];
+                        k--;
+                    }
+                    flagsX[k + 1] = key;
+                    j++;
+                }
+            }
+        }
+#pragma omp for
+        for (int i = 0; i < threadCount - 1; i++)
+        {
+
+            insertionSort(flagsX, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
+
+        }
+#pragma omp for
+        for(unsigned int i = 0; i < threadCount; i++)
+        {
+
+            insertionSort(flagsX, i * chunkSize, (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp single
+        {
+            for (int i = threadCount - 2; i > 0; i--) {
+                int j = 0;
+                while (flagsX[i * chunkSize - 1 - j].value > flagsX[i * chunkSize - 1 + chunkSize / 2].value &&
+                       j < chunkSize) {
+                    int k = i * chunkSize - j;
+                    valTag key = flagsX[i * chunkSize - 1 - j];
+                    while (k < flagsX.size() && flagsX[k].value < key.value) {
+                        flagsX[k - 1] = flagsX[k];
+                        k++;
+                    }
+                    flagsX[k - 1] = key;
+                    j++;
+                }
+            }
+        }
+#pragma omp for
+        for (int i = 0; i < threadCount - 1; i++)
+        {
+
+            insertionSort(flagsX, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
+
+        }
+#pragma omp for
+        for(unsigned int i = 0; i < threadCount; i++)
+        {
+
+            insertionSort(flagsX, i * chunkSize, (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp single
+        {
+            insertionSort(flagsX, 0, flagsX.size() - 1);
+        }
+        //==========================================================
+#pragma omp for
+        for(unsigned int i = 0; i < threadCount; i++)
+        {
+
+
+            insertionSort(flagsY, i * chunkSize, (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp for
+        for (int i = 0; i < threadCount - 1; i++)
+        {
+
+            insertionSort(flagsY, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp for
+        for(unsigned int i = 0; i < threadCount; i++)
+        {
+
+            insertionSort(flagsY, i * chunkSize, (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp for
+        for (int i = 0; i < threadCount - 1; i++)
+        {
+            {
+                insertionSort(flagsY, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
+            }
+        }
+
+#pragma omp for
+        for(unsigned int i = 0; i < threadCount; i++)
+        {
+            insertionSort(flagsY, i * chunkSize, (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp single
+        {
+            for (int i = 1; i < threadCount; i++) {
+                int j = 0;
+                while (flagsY[i * chunkSize + j].value <= flagsY[(i - 1) * chunkSize].value && j < chunkSize) {
+                    int k = chunkSize * i - 1 + j;
+                    valTag key = flagsY[i * chunkSize + j];
+                    while (k >= 0 && flagsY[k].value > key.value) {
+                        flagsY[k + 1] = flagsY[k];
+                        k--;
+                    }
+                    flagsY[k + 1] = key;
+                    j++;
+                }
+            }
+        }
+#pragma omp for
+        for (int i = 0; i < threadCount - 1; i++)
+        {
+
+            insertionSort(flagsY, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
+
+        }
+#pragma omp for
+        for(unsigned int i = 0; i < threadCount; i++)
+        {
+
+            insertionSort(flagsY, i * chunkSize, (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp single
+        {
+            for (int i = threadCount - 2; i > 0; i--) {
+                int j = 0;
+                while (flagsY[i * chunkSize - 1 - j].value > flagsY[i * chunkSize - 1 + chunkSize / 2].value &&
+                       j < chunkSize) {
+                    int k = i * chunkSize - j;
+                    valTag key = flagsY[i * chunkSize - 1 - j];
+                    while (k < flagsY.size() && flagsY[k].value < key.value) {
+                        flagsY[k - 1] = flagsY[k];
+                        k++;
+                    }
+                    flagsY[k - 1] = key;
+                    j++;
+                }
+            }
+        }
+#pragma omp for
+        for (int i = 0; i < threadCount - 1; i++)
+        {
+
+            insertionSort(flagsY, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
+
+        }
+#pragma omp for
+        for(unsigned int i = 0; i < threadCount; i++)
+        {
+
+            insertionSort(flagsY, i * chunkSize, (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp single
+        {
+            insertionSort(flagsY, 0, flagsY.size() - 1);
+        }
+        //=============================
+#pragma omp for
+        for(unsigned int i = 0; i < threadCount; i++)
+        {
+
+
+            insertionSort(flagsZ, i * chunkSize, (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp for
+        for (int i = 0; i < threadCount - 1; i++)
+        {
+
+            insertionSort(flagsZ, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp for
+        for(unsigned int i = 0; i < threadCount; i++)
+        {
+
+            insertionSort(flagsZ, i * chunkSize, (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp for
+        for (int i = 0; i < threadCount - 1; i++)
+        {
+            {
+                insertionSort(flagsZ, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
+            }
+        }
+
+#pragma omp for
+        for(unsigned int i = 0; i < threadCount; i++)
+        {
+            insertionSort(flagsZ, i * chunkSize, (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp single
+        {
+            for (int i = 1; i < threadCount; i++) {
+                int j = 0;
+                while (flagsZ[i * chunkSize + j].value <= flagsZ[(i - 1) * chunkSize].value && j < chunkSize) {
+                    int k = chunkSize * i - 1 + j;
+                    valTag key = flagsZ[i * chunkSize + j];
+                    while (k >= 0 && flagsZ[k].value > key.value) {
+                        flagsZ[k + 1] = flagsZ[k];
+                        k--;
+                    }
+                    flagsZ[k + 1] = key;
+                    j++;
+                }
+            }
+        }
+#pragma omp for
+        for (int i = 0; i < threadCount - 1; i++)
+        {
+
+            insertionSort(flagsZ, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
+
+        }
+#pragma omp for
+        for(unsigned int i = 0; i < threadCount; i++)
+        {
+
+            insertionSort(flagsZ, i * chunkSize, (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp single
+        {
+            for (int i = threadCount - 2; i > 0; i--) {
+                int j = 0;
+                while (flagsZ[i * chunkSize - 1 - j].value > flagsZ[i * chunkSize - 1 + chunkSize / 2].value &&
+                       j < chunkSize) {
+                    int k = i * chunkSize - j;
+                    valTag key = flagsZ[i * chunkSize - 1 - j];
+                    while (k < flagsZ.size() && flagsZ[k].value < key.value) {
+                        flagsZ[k - 1] = flagsZ[k];
+                        k++;
+                    }
+                    flagsZ[k - 1] = key;
+                    j++;
+                }
+            }
+        }
+#pragma omp for
+        for (int i = 0; i < threadCount - 1; i++)
+        {
+
+            insertionSort(flagsZ, chunkSize / 2 + i * chunkSize, chunkSize / 2 + (i + 1) * chunkSize - 1);
+
+        }
+#pragma omp for
+        for(unsigned int i = 0; i < threadCount; i++)
+        {
+
+            insertionSort(flagsZ, i * chunkSize, (i + 1) * chunkSize - 1);
+
+        }
+
+#pragma omp single
+        {
+            insertionSort(flagsZ, 0, flagsZ.size() - 1);
+
+
+            pairlist overlapsX = findOverlaps(flagsX);
+            pairlist overlapsY = findOverlaps(flagsY);
+            pairlist overlapsZ = findOverlaps(flagsZ);
+            potentialCollidedPairs = findPotentialCollidePairs(overlapsX, overlapsY, overlapsZ);
+
+            timeTag2 = std::chrono::high_resolution_clock::now();
+            auto broadPhaseDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag2 - timeTag1);
+            time_broadphase += broadPhaseDuration.count() * 0.001f;
+
+
+            // narrow phase
+
+            collisionInfolist collidedPairs = narrowPhase(potentialCollidedPairs);
+            timeTag1 = std::chrono::high_resolution_clock::now();
+            auto narrowPhaseDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag1 - timeTag2);
+            time_narrowphase += narrowPhaseDuration.count() * 0.001f;
+            // collision response
+
+            collisionResponse(collidedPairs);
+            timeTag2 = std::chrono::high_resolution_clock::now();
+            auto collisionResponseDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag2 - timeTag1);
+            time_collisionResponse += collisionResponseDuration.count() * 0.001f;
+        }
+    }
 }
 
 pairlist World::broadPhase()
@@ -180,19 +578,19 @@ void World::collisionResponse(collisionInfolist &collInfolist)
 {
     unsigned int size = collInfolist.collidedPairs.size();
 
+
     for(unsigned int idx = 0; idx < size; idx++)
     {
         glm::vec3 _mtv = collInfolist.mtvList[idx];
         std::pair<unsigned int, unsigned int> _pair = collInfolist.collidedPairs[idx];
-        #pragma omp task firstprivate(_mtv, _pair)
-        {
+
 
             glm::vec3 contactPt = calcContactPoint(_mtv, _pair.first, _pair.second);
 
             resolvePenetration(_mtv, _pair.first, _pair.second);
 
             collisionResponseInternal(_mtv, _pair.first, _pair.second, contactPt);
-        }
+
     }
 
     resolveClipping();
@@ -207,17 +605,16 @@ collisionInfolist World::narrowPhase(pairlist &potentialCollidedPairs)
     unsigned int size = potentialCollidedPairs.size();
     for(auto pair : potentialCollidedPairs)
     {
-        #pragma omp task firstprivate(pair)
+
         {
             if (bodyInstances[pair.first].objectType != EObjectType::STATIC ||
                 bodyInstances[pair.second].objectType != EObjectType::STATIC) {
                 glm::vec3 mtv;
                 if (narrowCheck(pair.first, pair.second, mtv)) {
-                    #pragma omp critical
-                    {
+
                         res.collidedPairs.push_back(pair);
                         res.mtvList.push_back(mtv);
-                    }
+
                 }
             }
         }

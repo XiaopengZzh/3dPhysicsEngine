@@ -102,6 +102,7 @@ public:
 
     unsigned int threadCount;
     unsigned int chunkSize;
+    pairlist potentialCollidedPairs;
 
 private:
 
