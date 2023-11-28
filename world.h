@@ -103,6 +103,9 @@ public:
     unsigned int threadCount;
     unsigned int chunkSize;
     pairlist potentialCollidedPairs;
+    pairlist overlapsX;
+    pairlist overlapsY;
+    pairlist overlapsZ;
 
 private:
 
