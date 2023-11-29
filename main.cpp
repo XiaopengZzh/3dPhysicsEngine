@@ -31,9 +31,9 @@ extern float time_narrowphase;
 extern float time_integration;
 
 // default input values
-unsigned int thread_count = 1;
+unsigned int thread_count = 8;
 float totalRunTime = 60.0f;
-unsigned int cubeNum = 500;
+unsigned int cubeNum = 200;
 unsigned int tetraNum = 200;
 float gravityReverseInterval = 15.0f;
 
@@ -158,16 +158,17 @@ int main(int argc, char* argv[])
         totalFrameCount++;
     }
 
+    float timeSum = time_broadphase + time_integration + time_collisionResponse + time_narrowphase;
 
     printf("simulation ends.\n");
     printf("======================================================\n");
     printf("frames number in total : %d\n", totalFrameCount);
     printf("real run time : %f\n", elapsedTime);
     printf("fps : %f \n", float(totalFrameCount) / elapsedTime);
-    printf("time consumed in integration : %f\n", time_integration);
-    printf("time consumed in broad phase : %f\n", time_broadphase);
-    printf("time consumed in narrow phase : %f\n", time_narrowphase);
-    printf("time consumed in collision response : %f\n", time_collisionResponse);
+    printf("time consumed in integration : %f\n", time_integration / timeSum * totalRunTime);
+    printf("time consumed in broad phase : %f\n", time_broadphase / timeSum * totalRunTime);
+    printf("time consumed in narrow phase : %f\n", time_narrowphase / timeSum * totalRunTime);
+    printf("time consumed in collision response : %f\n", time_collisionResponse / timeSum * totalRunTime);
     printf("======================================================\n");
 
 
