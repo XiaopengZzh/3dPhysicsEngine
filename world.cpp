@@ -239,13 +239,13 @@ void World::simulate(float dt)
 
 
             // narrow phase
-
+            // narrowPhase is parallelized inside using omp tasks
             collisionInfolist collidedPairs = narrowPhase(potentialCollidedPairs);
             timeTag1 = std::chrono::high_resolution_clock::now();
             auto narrowPhaseDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag1 - timeTag2);
             time_narrowphase += narrowPhaseDuration.count() * 0.001f;
             // collision response
-
+            // collision response is parallelized inside using omp tasks
             collisionResponse(collidedPairs);
             timeTag2 = std::chrono::high_resolution_clock::now();
             auto collisionResponseDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag2 - timeTag1);
@@ -276,14 +276,14 @@ void World::collisionResponse(collisionInfolist &collInfolist)
     {
         glm::vec3 _mtv = collInfolist.mtvList[idx];
         std::pair<unsigned int, unsigned int> _pair = collInfolist.collidedPairs[idx];
-
-
+#pragma omp task firstprivate(_mtv, _pair)
+        {
             glm::vec3 contactPt = calcContactPoint(_mtv, _pair.first, _pair.second);
 
             resolvePenetration(_mtv, _pair.first, _pair.second);
 
             collisionResponseInternal(_mtv, _pair.first, _pair.second, contactPt);
-
+        }
     }
 
     resolveClipping();
@@ -298,16 +298,17 @@ collisionInfolist World::narrowPhase(pairlist &potentialCollidedPairs)
     unsigned int size = potentialCollidedPairs.size();
     for(auto pair : potentialCollidedPairs)
     {
-
+#pragma omp task firstprivate(pair)
         {
             if (bodyInstances[pair.first].objectType != EObjectType::STATIC ||
                 bodyInstances[pair.second].objectType != EObjectType::STATIC) {
                 glm::vec3 mtv;
                 if (narrowCheck(pair.first, pair.second, mtv)) {
-
+#pragma omp critical
+                    {
                         res.collidedPairs.push_back(pair);
                         res.mtvList.push_back(mtv);
-
+                    }
                 }
             }
         }
