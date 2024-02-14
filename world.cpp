@@ -133,8 +133,9 @@ void World::simulate(float dt)
     auto integrationDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag2 - timeTag1);
     time_integration += integrationDuration.count() * 0.001f;
 
+    // if syncTransform is put here, the result of resolvePenetration cannot be displayed.
 #if RENDER_ENABLED
-    syncTransform();
+    //syncTransform();
 #endif //RENDER_ENABLED
 
     // broad phase
@@ -159,6 +160,13 @@ void World::simulate(float dt)
     timeTag2 = std::chrono::high_resolution_clock::now();
     auto collisionResponseDuration = std::chrono::duration_cast<std::chrono::milliseconds>(timeTag2 - timeTag1);
     time_collisionResponse += collisionResponseDuration.count() * 0.001f;
+
+#if RENDER_ENABLED
+
+    syncTransform();
+
+#endif  //RENDER_ENABLED
+
 }
 
 pairlist World::broadPhase()

@@ -3,7 +3,7 @@
 #ifndef MACROS_H
 #define MACROS_H
 
-#define FORCE_DISABLE_RENDER 1
+#define FORCE_DISABLE_RENDER 0
 
 
 #if (defined(_WIN64) || defined(__WIN32) || defined(__APPLE__)) && (FORCE_DISABLE_RENDER == 0)
@@ -20,7 +20,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 #endif
 
-#define GRAVITY_ACC 1.0f
+#define GRAVITY_ACC 0.3f
 #define ZNEAR 0.1f
 #define ZFAR 1000.0f
 

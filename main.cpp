@@ -33,7 +33,7 @@ unsigned int thread_count = 1;
 float totalRunTime = 60.0f;
 unsigned int cubeNum = 150;
 unsigned int tetraNum = 50;
-float gravityReverseInterval = 15.0f;
+float gravityReverseInterval = 65.0f;
 
 int main(int argc, char* argv[])
 {
