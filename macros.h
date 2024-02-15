@@ -20,7 +20,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 #endif
 
-#define GRAVITY_ACC 3.0f
+#define GRAVITY_ACC 100.0f
 #define ZNEAR 0.1f
 #define ZFAR 1000.0f
 
