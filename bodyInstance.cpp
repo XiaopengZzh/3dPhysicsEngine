@@ -30,7 +30,7 @@ bodyInstance::bodyInstance(EObjectType type, collisionGeometry *collision)
     //mass = 1.0f;
     pendingLinearImpulse = glm::vec3(0.0f);
     pendingAngularImpulse = glm::vec3(0.0f);
-    restitution = 0.95f;
+    restitution = 0.7f;
 }
 
 

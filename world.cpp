@@ -231,12 +231,13 @@ void World::integration(float dt)
         movements[idx].momentum += bodyInstances[idx].pendingLinearImpulse;
         movements[idx].angularMomentum += bodyInstances[idx].pendingAngularImpulse;
 
-        transforms[idx].position += dt * (movements[idx].momentum * 2.0f - bodyInstances[idx].pendingLinearImpulse) / (2.0f * bodyInstances[idx].collision->mass);
+        // impulse arising from collision should be applied immediately
+        transforms[idx].position += dt * (movements[idx].momentum * 2.0f - bodyInstances[idx].collision->mass * gravity * dt) / (2.0f * bodyInstances[idx].collision->mass);
 
         // calculate rotation
         glm::mat3 Rot = glm::toMat3(transforms[idx].rotation);
         glm::vec3 angularVelocity = glm::transpose(Rot) * bodyInstances[idx].collision->inertiaTensorInv *
-                Rot * (movements[idx].angularMomentum - bodyInstances[idx].pendingAngularImpulse / 2.0f);
+                Rot * (movements[idx].angularMomentum);
         //glm::vec3 angularVelocity =
         glm::quat newRot = transforms[idx].rotation + transforms[idx].rotation * glm::exp(0.5f * glm::quat(0.0f, angularVelocity * dt));
         transforms[idx].rotation = glm::normalize(newRot);
@@ -514,12 +515,44 @@ glm::vec3 World::calcContactPoint(glm::vec3 minimalTranslationalVector, unsigned
     glm::vec3 contactPt;
 
     // Todo : check if both are infinite small.
-    if(diff1 < diff2)
+    /*
+    if(diff2 < diff1)
     {
         contactPt = bodyInstances[idx1].collision->collisionVertices[contactPtIdx1];
         contactPt = transforms[idx1].rotation * contactPt + transforms[idx1].position + minimalTranslationalVector * (mass1 / (mass1 + mass2));
     }
     else
+    {
+        contactPt = bodyInstances[idx2].collision->collisionVertices[contactPtIdx2];
+        contactPt = transforms[idx2].rotation * contactPt + transforms[idx2].position - minimalTranslationalVector * (mass2 / (mass1 + mass2));
+    }
+    */
+    // Todo : stop if both are static
+    int branchNum = 0;
+
+    if(bodyInstances[idx1].objectType == EObjectType::STATIC)
+    {
+        branchNum = 2;
+    }
+    else if(bodyInstances[idx2].objectType == EObjectType::STATIC)
+    {
+        branchNum = 1;
+    }
+    else if(diff1 > diff2)
+    {
+        branchNum = 1;
+    }
+    else if(diff1 < diff2)
+    {
+        branchNum = 2;
+    }
+
+    if(branchNum == 1)
+    {
+        contactPt = bodyInstances[idx1].collision->collisionVertices[contactPtIdx1];
+        contactPt = transforms[idx1].rotation * contactPt + transforms[idx1].position + minimalTranslationalVector * (mass1 / (mass1 + mass2));
+    }
+    else if(branchNum == 2)
     {
         contactPt = bodyInstances[idx2].collision->collisionVertices[contactPtIdx2];
         contactPt = transforms[idx2].rotation * contactPt + transforms[idx2].position - minimalTranslationalVector * (mass2 / (mass1 + mass2));
